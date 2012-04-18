@@ -1,0 +1,139 @@
+<?php
+
+/**
+ * @file
+ * Adding support for saving and reuse old searches
+ */
+
+/**
+ * Implements hook_block_info();
+ */
+function bibdk_searchhistory_block_info() {
+  $blocks['bibdk_search_history'] = array(
+    'info' => t('Bibdk search history'),
+    'status' => TRUE,
+    'Description' => t('Displaying the current users search history'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+  
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_configure();
+ */
+function bibdk_searchhistory_block_configure($delta) {
+  $form = array();
+  switch ($delta) {
+    case 'bibdk_search_history':
+      /* //TODO add pager to table and the ability to change number of results on each page in config
+        $form['search_history_count'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Number of results shown on each page'),
+        '#size' => 5,
+        '#description' => t('Enter the number of search results shown to the user on each page - 0 = unlimited'),
+        '#default_value' => variable_get('search_history_count', 0),
+        );
+       * 
+       */
+      $form['search_history_save_limit'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Highest number of saved searches'),
+        '#size' => 5,
+        '#description' => t('Number of saved searches. When exceeded will the oldest unsaved searches  be deleted - 0 = unlimited'),
+        '#default_value' => variable_get('search_history_save_limit', 50),
+      );
+      break;
+  }
+  
+  return $form;
+}
+
+/**
+ * Implements hook_block_save(). 
+ */
+function bibdk_searchhistory_block_save($delta = '', $edit = array()) {
+  switch ($delta) {
+    case 'bibdk_search_history':
+      #variable_set('search_history_count', (int) abs($edit['search_history_count']));
+      variable_set('search_history_save_limit', (int) abs($edit['search_history_save_limit']));
+      break;
+  }
+  
+  return;
+}
+
+/**
+ * Implements hook_block_view();
+ */
+function bibdk_searchhistory_block_view($delta = '') {
+  switch ($delta) {
+    case 'bibdk_search_history':
+      $block['subject'] = t('Search history');
+      $block['content'] = bibdk_searchhistory_get_history();
+      return $block;
+      break;
+  }
+}
+
+/**
+ *  Displayes the current users searchhistory
+ */
+function bibdk_searchhistory_get_history() {
+  //TODO currently only showing data stored in current session - should be extended to retreive users saved data also
+
+  if (!array_key_exists('searches', $_SESSION)) {
+    $markup = t('no searsches to display');
+  }
+  else {
+    $searches = $_SESSION['searches'];
+    $markup = bibdk_searchhistory_generate_table($searches);
+  }
+
+  return $markup;
+}
+
+
+/**
+ * Generates a themed table based on the received array
+ * @param Array $searches - array 'searches' from $_SESSION variable
+ * @return String $output - themed table html with all searches stored in the $_SESSION variable
+ */
+function bibdk_searchhistory_generate_table($searches) {
+  $header = array(
+    array('data' => t('Search string')),
+    array('data' => t('Result count'), 'sort' => 'desc'));
+
+  $rows = array();
+
+  foreach ($searches as $key => $value) {
+    $link = l($key, 'search/ting/' . $key);
+    $search = array($link, $value);
+    $rows[] = $search;
+  }
+
+  $output = theme('table', array('header' => $header,
+    'rows' => $rows,
+    'empty' => t('No searches executed yet')));
+
+  return $output;
+}
+
+/**
+ * Called from ting_search when a search is being executed. Saves the search string and number of results in the $_SESSION variable
+ * @param String $keys - searchstring
+ * @param int $searchsresult - result count
+ */
+function bibdk_searchhistory_set_search_results($keys, $searchsresult) {
+  $limit = (int) variable_get('search_history_save_limit');
+
+  if (!$_SESSION['searches']) {
+    $_SESSION['searches'] = array();
+  }
+
+  if (count($_SESSION['searches']) >= $limit && !array_key_exists($keys, $_SESSION['searches'])) {
+    array_shift($_SESSION['searches']);
+  }
+
+  $_SESSION['searches'][$keys] = $searchsresult->numTotalObjects;
+}

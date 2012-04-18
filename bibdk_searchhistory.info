@@ -1,0 +1,7 @@
+name = Bibdk search history
+description = "Provides the user the ability to save and reuse old search queries. Set limitations on number of search results shown in the block configuration."
+package = "Bibliotek.dk"
+dependencies[] = ting_search
+core = 7.x
+ 
+files[] = bibdk_searchhistory.module
