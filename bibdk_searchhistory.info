@@ -5,3 +5,4 @@ dependencies[] = ting_search
 core = 7.x
  
 files[] = bibdk_searchhistory.module
+files[] = bibdk_searchhistory.test

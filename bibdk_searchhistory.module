@@ -8,14 +8,14 @@
 /**
  * Implements hook_block_info();
  */
-function bibdk_searchhistory_block_info() {
+function bibdk_searchhistory_block_info($blocks) {
   $blocks['bibdk_search_history'] = array(
     'info' => t('Bibdk search history'),
     'status' => TRUE,
     'Description' => t('Displaying the current users search history'),
     'cache' => DRUPAL_NO_CACHE,
   );
-  
+
   return $blocks;
 }
 
@@ -40,12 +40,12 @@ function bibdk_searchhistory_block_configure($delta) {
         '#type' => 'textfield',
         '#title' => t('Highest number of saved searches'),
         '#size' => 5,
-        '#description' => t('Number of saved searches. When exceeded will the oldest unsaved searches  be deleted - 0 = unlimited'),
+        '#description' => t('Number of saved searches. When exceeded will the oldest unsaved searches be deleted - 0 = unlimited'),
         '#default_value' => variable_get('search_history_save_limit', 50),
       );
       break;
   }
-  
+
   return $form;
 }
 
@@ -59,7 +59,7 @@ function bibdk_searchhistory_block_save($delta = '', $edit = array()) {
       variable_set('search_history_save_limit', (int) abs($edit['search_history_save_limit']));
       break;
   }
-  
+
   return;
 }
 
@@ -70,53 +70,112 @@ function bibdk_searchhistory_block_view($delta = '') {
   switch ($delta) {
     case 'bibdk_search_history':
       $block['subject'] = t('Search history');
-      $block['content'] = bibdk_searchhistory_get_history();
+      $block['content'] = drupal_get_form('bibdk_searchhistory_get_form');
       return $block;
       break;
   }
 }
 
 /**
- *  Displayes the current users searchhistory
+ * Create the tableselect form with searchresults
+ * @param type $form
+ * @return array $form
  */
-function bibdk_searchhistory_get_history() {
-  //TODO currently only showing data stored in current session - should be extended to retreive users saved data also
+function bibdk_searchhistory_get_form($form) {
+  if (!_bibdk_searchhistory_check_session())
+    return;
 
-  if (!array_key_exists('searches', $_SESSION)) {
-    $markup = t('no searsches to display');
-  }
-  else {
+  $session_history = array();
+  $savedseraches = array();
+
+  if (count($_SESSION['searches']) >= 0) {
     $searches = $_SESSION['searches'];
-    $markup = bibdk_searchhistory_generate_table($searches);
+    foreach ($searches as $key => $value) {
+      $link = 'search/ting/'.$key;
+      $session_history[$key] = array(
+        'search_string' => l($key, $link),
+        'result_count' => $value,
+      );
+    }
   }
 
-  return $markup;
+  $header = array(
+    'search_string' => t('Search string'),
+    'result_count' => t('Result count'),
+  );
+   
+ 
+  $form['bibdk_searchhistory_form']['bibdk_search_history_table'] = array(
+    '#type' => 'tableselect',
+    '#header' => $header,
+    '#options' => $session_history,
+    '#empty' => t('No searches executed yet'),
+    '#js_select' => TRUE,
+    '#multiple' => TRUE,
+    '#default_value' => $session_history,
+  );
+  
+  
+  $form['bibdk_searchhistory_form']['bibdk_search_history_submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save selected'),
+  );
+  
+  $form['bibdk_searchhistory_form']['bibdk_search_history_clear'] = array(
+    '#type' => 'submit',
+    '#value' => t('Clear history'),
+  );
+
+  return $form;
 }
 
 
-/**
- * Generates a themed table based on the received array
- * @param Array $searches - array 'searches' from $_SESSION variable
- * @return String $output - themed table html with all searches stored in the $_SESSION variable
- */
-function bibdk_searchhistory_generate_table($searches) {
-  $header = array(
-    array('data' => t('Search string')),
-    array('data' => t('Result count'), 'sort' => 'desc'));
+function bibdk_searchresults_theme_tableselect($variables) {
+  $element = $variables['element'];
 
   $rows = array();
+  $header = $element['#header'];
+  if (!empty($element['#options'])) {
+    $options = $element['#options'];
+    // Generate a table row for each selectable item in #options.
+    foreach ($options as $key => $value) {
+      $row = array();
 
-  foreach ($searches as $key => $value) {
-    $link = l($key, 'search/ting/' . $key);
-    $search = array($link, $value);
-    $rows[] = $search;
+      $row['data'] = array();
+      if (isset($element['#options'][$key]['#attributes'])) {
+        $row += $element['#options'][$key]['#attributes'];
+      }
+
+      // As theme_table only maps header and row columns by order, create the
+      // correct order by iterating over the header fields.
+      foreach ($element['#header'] as $fieldname => $title) {
+        $row['data'][] = $element['#options'][$key][$fieldname];
+      }
+
+      // Render the checkbox / radio element.
+      #$row['data'][] = drupal_render($options[$key]);
+
+      $row['data'][] = theme_checkbox($variables = array(
+        'element' => array(
+          '#title' => 'some title',
+          )));
+      $rows[] = $row;
+    }
+    // Add an empty header or a "Select all" checkbox to provide room for the
+    // checkboxes/radios in the first table column.
+    if ($element['#js_select']) {
+      // Add a "Select all" checkbox.
+      drupal_add_js('misc/tableselect.js');
+      array_push($header, array('data' => t('Select all'), 'class' => array('select-all')));
+      dpm($header);
+    }
+    else {
+      // Add an empty header when radio buttons are displayed or a "Select all"
+      // checkbox is not desired.
+      array_unshift($header, '');
+    }
   }
-
-  $output = theme('table', array('header' => $header,
-    'rows' => $rows,
-    'empty' => t('No searches executed yet')));
-
-  return $output;
+  return theme('table', array('header' => $header, 'rows' => $rows, 'empty' => $element['#empty']));
 }
 
 /**
@@ -125,15 +184,43 @@ function bibdk_searchhistory_generate_table($searches) {
  * @param int $searchsresult - result count
  */
 function bibdk_searchhistory_set_search_results($keys, $searchsresult) {
-  $limit = (int) variable_get('search_history_save_limit');
-
-  if (!$_SESSION['searches']) {
-    $_SESSION['searches'] = array();
+  if (!_bibdk_searchhistory_check_session()) {
+    return;
   }
 
+  $limit = (int) variable_get('search_history_save_limit');
   if (count($_SESSION['searches']) >= $limit && !array_key_exists($keys, $_SESSION['searches'])) {
     array_shift($_SESSION['searches']);
   }
 
-  $_SESSION['searches'][$keys] = $searchsresult->numTotalObjects;
+  $_SESSION['searches'][$keys] = _bibdk_searchhistory_check_searchresult($searchsresult);
+}
+
+/**
+ * Helper function to check if the $_SESSION is available.
+ * @return boolean 
+ */
+function _bibdk_searchhistory_check_session() {
+
+  if (!isset($_SESSION)) {
+    watchdog('bibdk searchhistory', 'No $_SESSION available - returning false. No search result stored');
+    return FALSE;
+  }
+  else if (!array_key_exists('searches', $_SESSION)) {
+    $_SESSION['searches'] = array();
+  }
+  return TRUE;
+}
+
+/**
+ * Helper function to check if any results is returnes
+ * @param ting_object$searchsresult
+ * @return int $count 
+ */
+function _bibdk_searchhistory_check_searchresult($searchsresult) {
+  $count = 0;
+  if ($searchsresult) {
+    $count = $searchsresult->numTotalObjects;
+  }
+  return $count;
 }
