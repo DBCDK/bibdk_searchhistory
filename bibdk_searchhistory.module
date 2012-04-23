@@ -11,7 +11,6 @@
 function bibdk_searchhistory_block_info() {
   $blocks['bibdk_search_history'] = array(
     'info' => t('Bibdk search history'),
-    'status' => TRUE,
     'Description' => t('Displaying the current users search history'),
     'cache' => DRUPAL_NO_CACHE,
   );
