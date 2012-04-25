@@ -82,7 +82,10 @@ function bibdk_searchhistory_block_view($delta = '') {
  */
 function bibdk_searchhistory_get_form($form) {
 
-  _bibdk_searchhistory_check_session();
+  if (!isset($_SESSION)) {
+    _bibdk_searchhistory_check_session();
+    return;
+  }
 
   $session_history = array();
   $savedseraches = array();
