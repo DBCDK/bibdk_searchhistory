@@ -1,0 +1,24 @@
+<?php
+
+/**
+ * @file
+ * Tets class intented to act as simpletest for the bibdk_searchhistory module
+ */
+
+class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
+
+  /**
+   *Info for this test case 
+   */
+  public function getInfo(){
+    return array(
+      'name' => 'Bibdk Search History functionality',
+      'description' => t('Test the functionality of Bibdk Search History'),
+      'group' => 'Bibdk Search History',
+    );
+  }
+  
+  public function setUp() {
+    parent::setUp('bibdk_searchhistory');
+  }
+}

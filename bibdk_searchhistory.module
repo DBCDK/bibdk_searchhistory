@@ -19,17 +19,6 @@ function bibdk_searchhistory_block_info() {
 }
 
 /**
- * Implements hook_boot() 
- */
-function bibdk_searchhistory_boot(){
-  if(!$_SESSION){
-    global $user;
-    $user-session;
-    $_SESSION['searches'] = array();
-  }
-}
-
-/**
  * Implements hook_block_configure();
  */
 function bibdk_searchhistory_block_configure($delta) {
@@ -92,14 +81,14 @@ function bibdk_searchhistory_block_view($delta = '') {
  * @return array $form
  */
 function bibdk_searchhistory_get_form($form) {
-  if (!_bibdk_searchhistory_check_session())
-    return;
+
+  _bibdk_searchhistory_check_session();
 
   $session_history = array();
   $savedseraches = array();
 
   if (count($_SESSION['searches']) >= 0) {
-    $searches = $_SESSION['searches'];
+    $searches = array_reverse($_SESSION['searches']);
     foreach ($searches as $key => $value) {
       $link = 'search/ting/' . $key;
       $session_history[$key] = array(
@@ -139,60 +128,59 @@ function bibdk_searchhistory_get_form($form) {
   return $form;
 }
 
-
 /**
- * Deprecated
+ * ¡Deprecated!
  * @param array $variables
  * @return type 
  */
 /*
-function bibdk_searchresults_theme_tableselect($variables) {
+  function bibdk_searchresults_theme_tableselect($variables) {
   $element = $variables['element'];
 
   $rows = array();
   $header = $element['#header'];
   if (!empty($element['#options'])) {
-    $options = $element['#options'];
-    // Generate a table row for each selectable item in #options.
-    foreach ($options as $key => $value) {
-      $row = array();
+  $options = $element['#options'];
+  // Generate a table row for each selectable item in #options.
+  foreach ($options as $key => $value) {
+  $row = array();
 
-      $row['data'] = array();
-      if (isset($element['#options'][$key]['#attributes'])) {
-        $row += $element['#options'][$key]['#attributes'];
-      }
+  $row['data'] = array();
+  if (isset($element['#options'][$key]['#attributes'])) {
+  $row += $element['#options'][$key]['#attributes'];
+  }
 
-      // As theme_table only maps header and row columns by order, create the
-      // correct order by iterating over the header fields.
-      foreach ($element['#header'] as $fieldname => $title) {
-        $row['data'][] = $element['#options'][$key][$fieldname];
-      }
+  // As theme_table only maps header and row columns by order, create the
+  // correct order by iterating over the header fields.
+  foreach ($element['#header'] as $fieldname => $title) {
+  $row['data'][] = $element['#options'][$key][$fieldname];
+  }
 
-      // Render the checkbox / radio element.
-      #$row['data'][] = drupal_render($options[$key]);
+  // Render the checkbox / radio element.
+  #$row['data'][] = drupal_render($options[$key]);
 
-      $row['data'][] = theme_checkbox($variables = array(
-        'element' => array(
-          '#title' => 'some title',
-          )));
-      $rows[] = $row;
-    }
-    // Add an empty header or a "Select all" checkbox to provide room for the
-    // checkboxes/radios in the first table column.
-    if ($element['#js_select']) {
-      // Add a "Select all" checkbox.
-      drupal_add_js('misc/tableselect.js');
-      array_push($header, array('data' => t('Select all'), 'class' => array('select-all')));
-      dpm($header);
-    }
-    else {
-      // Add an empty header when radio buttons are displayed or a "Select all"
-      // checkbox is not desired.
-      array_unshift($header, '');
-    }
+  $row['data'][] = theme_checkbox($variables = array(
+  'element' => array(
+  '#title' => 'some title',
+  )));
+  $rows[] = $row;
+  }
+  // Add an empty header or a "Select all" checkbox to provide room for the
+  // checkboxes/radios in the first table column.
+  if ($element['#js_select']) {
+  // Add a "Select all" checkbox.
+  drupal_add_js('misc/tableselect.js');
+  array_push($header, array('data' => t('Select all'), 'class' => array('select-all')));
+  dpm($header);
+  }
+  else {
+  // Add an empty header when radio buttons are displayed or a "Select all"
+  // checkbox is not desired.
+  array_unshift($header, '');
+  }
   }
   return theme('table', array('header' => $header, 'rows' => $rows, 'empty' => $element['#empty']));
-}
+  }
  * 
  */
 
@@ -203,9 +191,7 @@ function bibdk_searchresults_theme_tableselect($variables) {
  */
 function bibdk_searchhistory_set_search_results($keys, $searchsresult) {
 
-  if (!_bibdk_searchhistory_check_session()) {
-    return;
-  }
+  _bibdk_searchhistory_check_session();
 
   $limit = (int) variable_get('search_history_save_limit');
   if (count($_SESSION['searches']) >= $limit && !array_key_exists($keys, $_SESSION['searches'])) {
@@ -216,18 +202,16 @@ function bibdk_searchhistory_set_search_results($keys, $searchsresult) {
 }
 
 /**
- * Helper function to check if the $_SESSION is available.
- * @return boolean 
+ * Helper function to check if the $_SESSION is available if not one is created.
  */
 function _bibdk_searchhistory_check_session() {
   if (!isset($_SESSION)) {
-    watchdog('bibdk searchhistory', 'No $_SESSION available - returning false. No search result stored');
-    return FALSE;
+    drupal_session_initialize();
+    $_SESSION['searches'] = array();
   }
   else if (!array_key_exists('searches', $_SESSION)) {
     $_SESSION['searches'] = array();
   }
-  return TRUE;
 }
 
 /**
