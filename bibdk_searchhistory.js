@@ -14,7 +14,7 @@
             
             $('.memolist-check').change(function(){ 
                 currentItem = $(this);
-                currentItem.attr('disabled', true);
+                $('.memolist-check').attr('disabled', true);
                 
                 var string = $(this).attr('string');
                 var count = $(this).attr('count');
@@ -42,7 +42,7 @@
                         currentItem.attr('checked', true);
                     }
                 }
-                currentItem.removeAttr('disabled');
+                $('.memolist-check').removeAttr('disabled');
                 currentItem = null;
                 checked = null;
             }
