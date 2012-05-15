@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Adding support for saving and reuse old searches
+ * Adding support for saving and reuse of old searches
  */
 
 /**
@@ -16,6 +16,24 @@ function bibdk_searchhistory_block_info() {
   );
 
   return $blocks;
+}
+
+/**
+ * Implements hook_menu().
+ * Sets up menu items for javascript callbacks.
+ *
+ */
+function bibdk_searchhistory_menu() {
+  $items = array();
+
+  $items['bibdk_searchhistory/memoitemchanged/%/%/%/%'] = array(
+    'page callback' => 'bibdk_searchhistory_memoitem_change_callback',
+    'page arguments' => array(2, 3, 4, 5),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
 }
 
 /**
@@ -69,42 +87,38 @@ function bibdk_searchhistory_block_view($delta = '') {
   switch ($delta) {
     case 'bibdk_search_history':
       $block['subject'] = t('Search history');
-      $block['content'] = drupal_get_form('bibdk_searchhistory_get_form');
+      $block['content'] = drupal_get_form('bibdk_searchhistory_form');
       return $block;
       break;
   }
 }
 
 /**
- * Create the tableselect form with searchresults
+ * Create the tableselect form with searchresults and possibly saved searches
  * @param type $form
  * @return array $form
  */
-function bibdk_searchhistory_get_form($form) {
+function bibdk_searchhistory_form($form) {
 
-  if (!isset($_SESSION)) {
-    _bibdk_searchhistory_check_session();
-  }
+  _bibdk_searchhistory_check_session();
 
-  $session_history = array();
-  $savedseraches = array();
-
-  if (count($_SESSION['searches']) >= 0) {
-    $searches = array_reverse($_SESSION['searches']);
-    foreach ($searches as $key => $value) {
-      $link = 'search/ting/' . $key;
-      $session_history[$key] = array(
-        'search_string' => l($key, $link),
-        'result_count' => $value,
-      );
-    }
-  }
+  global $user;
+  $logged_in = $user->uid;
 
   $header = array(
     'search_string' => t('Search string'),
     'result_count' => t('Result count'),
   );
 
+  $session_history = array();
+
+//Only logged in users should be given the option to save their searches
+  if ($logged_in) {
+    $header['memolist'] = t('Memolist');
+    $session_history = bibdk_searchhistory_get_saved_searches($logged_in);
+  }
+
+  $session_history = bibdk_searchhistory_get_session_searches($logged_in, $session_history);
 
   $form['bibdk_searchhistory_form']['bibdk_search_history_table'] = array(
     '#type' => 'tableselect',
@@ -113,78 +127,190 @@ function bibdk_searchhistory_get_form($form) {
     '#empty' => t('No searches executed yet'),
     '#js_select' => TRUE,
     '#multiple' => TRUE,
-    '#default_value' => $session_history,
+    '#default_value' => array(), //$session_history,
   );
 
+  $radios = array(0 => t('Combine "And"'), 1 => t('Combine "Or"'));
 
-  $form['bibdk_searchhistory_form']['bibdk_search_history_submit'] = array(
+  $form['bibdk_searchhistory_form']['and_or_radios'] = array(
+    '#type' => 'radios',
+    '#options' => $radios,
+  );
+
+  $form['bibdk_searchhistory_form']['save'] = array(
     '#type' => 'submit',
     '#value' => t('Save selected'),
+    '#executes_submit_callback' => TRUE,
   );
 
-  $form['bibdk_searchhistory_form']['bibdk_search_history_clear'] = array(
-    '#type' => 'submit',
+  $form['bibdk_searchhistory_form']['clear_history'] = array(
+    '#type' => 'button',
     '#value' => t('Clear history'),
+    '#executes_submit_callback' => FALSE,
+  );
+
+  $form['bibdk_searchhistory_form']['combine'] = array(
+    '#type' => 'button',
+    '#value' => t('Combine'),
+    '#executes_submit_callback' => FALSE,
+    '#disabled' => TRUE,
+  );
+
+//Adding JavaScript
+  $form['#attached']['js'] = array(
+    drupal_get_path('module', 'bibdk_searchhistory') . '/bibdk_searchhistory.js',
   );
 
   return $form;
 }
 
 /**
- * ¡Deprecated!
- * @param array $variables
- * @return type 
+ * Retreives searches stored in current session and returns them
+ * @param int $logged_in
+ * @param array $session_history
+ * @return array 
  */
-/*
-  function bibdk_searchresults_theme_tableselect($variables) {
-  $element = $variables['element'];
+function bibdk_searchhistory_get_session_searches($logged_in, $session_history) {
+  if (count($_SESSION['searches']) >= 0) {
+    $searches = array_reverse($_SESSION['searches']);
+    foreach ($searches as $key) {
+      if (!array_key_exists($key['string'], $session_history)) {
+        $string = $key['string'];
+        $count = $key['count'];
 
-  $rows = array();
-  $header = $element['#header'];
-  if (!empty($element['#options'])) {
-  $options = $element['#options'];
-  // Generate a table row for each selectable item in #options.
-  foreach ($options as $key => $value) {
-  $row = array();
+        $link = 'search/ting/' . $string;
+        $session_history[$string] = array(
+          'search_string' => l($string, $link),
+          'result_count' => $count,
+        );
 
-  $row['data'] = array();
-  if (isset($element['#options'][$key]['#attributes'])) {
-  $row += $element['#options'][$key]['#attributes'];
+        if ($logged_in) { //Only logged in users should be given the option to save their searches
+          $timestamp = $key['timestamp'];
+          $session_history[$string]['memolist'] = drupal_render(drupal_get_form('bibdk_searchhistory_memolist_checkbox', $string, $count, $timestamp));
+        }
+      }
+    }
   }
+  return $session_history;
+}
 
-  // As theme_table only maps header and row columns by order, create the
-  // correct order by iterating over the header fields.
-  foreach ($element['#header'] as $fieldname => $title) {
-  $row['data'][] = $element['#options'][$key][$fieldname];
+/**
+ * Retreives the saved searches from the database for the given user id
+ * @param int $uid - user id
+ * @return array 
+ */
+function bibdk_searchhistory_get_saved_searches($uid) {
+  $query = db_select('bibdk_searchhistory_memolist', 'saved');
+  $query->fields('saved', array('timestamp', 'string', 'count'));
+  $query->condition('uid', $uid);
+  $query->orderBy('timestamp', 'DESC');
+  $result = $query->execute();
+
+  $saved = array();
+  if (count($result) >= 0) {
+    foreach ($result as $row) {
+
+      $string = $row->string;
+      $count = $row->count;
+      $timestamp = $row->timestamp;
+
+      $link = 'search/ting/' . $string;
+      $saved[$string] = array(
+        'search_string' => l($string, $link),
+        'result_count' => $count,
+        'memolist' => drupal_render(drupal_get_form('bibdk_searchhistory_memolist_checkbox', $string, $count, $timestamp, 1)),
+      );
+    }
   }
+  return $saved;
+}
 
-  // Render the checkbox / radio element.
-  #$row['data'][] = drupal_render($options[$key]);
+/**
+ * Returns a checkbox form array
+ * @param array $form
+ * @param array $form_state
+ * @param string $string
+ * @param int $count
+ * @param int $timestamp
+ * @param Boolean $checked
+ * @return $form array 
+ */
+function bibdk_searchhistory_memolist_checkbox($form, $form_state, $string, $count, $timestamp, $checked = 0) {
+  $form['bibdk_searchhistory_memolist_checkboxes'][$string] = array(
+    '#type' => 'checkbox',
+    '#name' => $string,
+    '#default_value' => $checked,
+    '#attributes' => array(
+      'class' => array('memolist-check'),
+      'string' => $string,
+      'count' => $count,
+      'timestamp' => $timestamp,
+    ),
+  );
+  return $form;
+}
 
-  $row['data'][] = theme_checkbox($variables = array(
-  'element' => array(
-  '#title' => 'some title',
-  )));
-  $rows[] = $row;
-  }
-  // Add an empty header or a "Select all" checkbox to provide room for the
-  // checkboxes/radios in the first table column.
-  if ($element['#js_select']) {
-  // Add a "Select all" checkbox.
-  drupal_add_js('misc/tableselect.js');
-  array_push($header, array('data' => t('Select all'), 'class' => array('select-all')));
-  dpm($header);
+/**
+ * Callback function called when a checkbox in the memolist column is changed
+ * @global Array $user used to detect whether we have logged in user or not
+ * @param String $string the search string the clicked checkbox represents
+ * @param int $count the result count the clicked checkbox represents
+ * @return Mixed
+ */
+function bibdk_searchhistory_memoitem_change_callback($string, $count, $val, $timestamp) {
+  global $user;
+  $uid = $user->uid;
+
+  if (!$uid)
+    return; //If user is not logged in it should not be possible to save searches
+
+  $entry = array(
+    'timestamp' => (int) $timestamp,
+    'uid' => (int) $uid,
+    'string' => $string,
+    'count' => $count,
+  );
+
+  if ($val) {
+    bibdk_searchhistory_save_search($entry);
   }
   else {
-  // Add an empty header when radio buttons are displayed or a "Select all"
-  // checkbox is not desired.
-  array_unshift($header, '');
+    bibdk_searchhistory_delete_saved_search($entry);
   }
-  }
-  return theme('table', array('header' => $header, 'rows' => $rows, 'empty' => $element['#empty']));
-  }
- * 
+}
+
+/**
+ * Saves $entry to bibdk_searchhistory_memolist to database. Throws error and asks tyhe user to reload if for some reason an error should occur
+ * @param type $entry 
  */
+function bibdk_searchhistory_save_search($entry) {
+  try {
+    db_insert('bibdk_searchhistory_memolist')
+        ->fields($entry)
+        ->execute();
+  } catch (Exception $e) {
+    echo t('Could not add entry to database. Please reload the page and try again. Error logged.');
+    watchdog(WATCHDOG_ERROR, $e);
+  }
+}
+
+/**
+ * Deletes $entry to bibdk_searchhistory_memolist to database. Throws error and asks tyhe user to reload if for some reason an error should occur
+ * @param type $entry 
+ */
+function bibdk_searchhistory_delete_saved_search($entry) {
+  try {
+    db_delete('bibdk_searchhistory_memolist')
+        ->condition('timestamp', $entry['timestamp'])
+        ->condition('uid', $entry['uid'])
+        ->condition('string', $entry['string'])
+        ->condition('count', $entry['count'])
+        ->execute();
+  } catch (Exception $e) {
+    echo t('Could not delete entry from database. Please reload the page and try again. Error logged.');
+    watchdog(WATCHDOG_ERROR, $e);
+  }
+}
 
 /**
  * Called from ting_search when a search is being executed. Saves the search string and number of results in the $_SESSION variable
@@ -192,7 +318,6 @@ function bibdk_searchhistory_get_form($form) {
  * @param int $searchsresult - result count
  */
 function bibdk_searchhistory_set_search_results($keys, $searchsresult) {
-
   _bibdk_searchhistory_check_session();
 
   $limit = (int) variable_get('search_history_save_limit');
@@ -200,13 +325,17 @@ function bibdk_searchhistory_set_search_results($keys, $searchsresult) {
     array_shift($_SESSION['searches']);
   }
 
-  $_SESSION['searches'][$keys] = _bibdk_searchhistory_check_searchresult($searchsresult);
+  $timestamp = time();
+  $_SESSION['searches'][$keys]['string'] = $keys;
+  $_SESSION['searches'][$keys]['count'] = _bibdk_searchhistory_check_searchresult($searchsresult);
+  $_SESSION['searches'][$keys]['timestamp'] = $timestamp;
 }
 
 /**
  * Helper function to check if the $_SESSION is available if not one is created.
  */
 function _bibdk_searchhistory_check_session() {
+
   if (!isset($_SESSION)) {
     drupal_session_initialize();
     $_SESSION['searches'] = array();
@@ -227,4 +356,16 @@ function _bibdk_searchhistory_check_searchresult($searchsresult) {
     $count = $searchsresult->numTotalObjects;
   }
   return $count;
+}
+
+/**
+ * Implements hook_user_delete().
+ * Deletes all search history entries in db connected to the deleted user.
+ * @param type $account
+ */
+function bibdk_searchhistory_user_delete($account) {
+  $uid = $account->uid;
+  db_delete('bibdk_searchhistory_memolist')
+      ->condition('uid', $uid)
+      ->execute();
 }
