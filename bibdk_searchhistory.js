@@ -45,7 +45,7 @@
                 if(data){
                     alert(data);
                 }
-                Drupal.t
+
                 if(shouldSave){
                     currentItem.attr('data-saved', 1);
                     currentItem.attr('value', Drupal.t('Remove'));
@@ -59,6 +59,35 @@
                 currentItem = null;
                 selected = null;
             }
+            
+            //Select/combine stuff
+            //
+            //header row
+            $('.select-all').change(function(){
+                window.setTimeout(countSelected, 100);
+            });
+            
+            //single rows
+            $('td div .combine-select').change(function(){
+                countSelected()
+            });
+            
+            function countSelected(){
+                var b = $('td div .combine-select');                
+                
+                var count = b.filter(':checked').length;          
+                
+                if(count >= 1){
+                    $('#edit-delete').removeAttr('disabled');    
+                    if(count >= 2){
+                        $('#edit-combine').removeAttr('disabled');    
+                    }
+                } else {
+                    $('#edit-delete').attr('disabled', 1);
+                    $('#edit-combine').attr('disabled', 1);   
+                }
+            }
+            
         }
     };
 })(jQuery);

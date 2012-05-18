@@ -25,7 +25,6 @@ function bibdk_searchhistory_block_info() {
  */
 function bibdk_searchhistory_menu() {
   $items = array();
-
   $items['bibdk_searchhistory/memoitemchanged/%/%/%/%'] = array(
     'page callback' => 'bibdk_searchhistory_memoitem_change_callback',
     'page arguments' => array(2, 3, 4, 5),
@@ -126,6 +125,7 @@ function bibdk_searchhistory_form($form) {
     '#options' => $session_history,
     '#empty' => t('No searches executed yet'),
     '#js_select' => TRUE,
+    '#tree' => TRUE,
     '#multiple' => TRUE,
     '#default_value' => array(),
     '#attributes' => array(
@@ -146,14 +146,19 @@ function bibdk_searchhistory_form($form) {
     '#type' => 'submit',
     '#value' => t('Delete selected'),
     '#executes_submit_callback' => TRUE,
-    '#disabled' => TRUE,
+    '#attributes' => array(
+      'disabled' => TRUE
+    ),
   );
 
   $form['bibdk_searchhistory_form']['combine'] = array(
     '#type' => 'button',
     '#value' => t('Combine'),
     '#executes_submit_callback' => FALSE,
-    '#disabled' => TRUE,
+    '#submit' => 'bibdk_searchhistory_form_combine',
+    '#attributes' => array(
+      'disabled' => TRUE
+    ),
   );
 
 //Adding JavaScript
@@ -165,42 +170,71 @@ function bibdk_searchhistory_form($form) {
 }
 
 /**
+ * form callback function. Removes selcted entries from $_SESSION['searches] array and deletes posts in db if necessary
+ * @global Array $user
+ * @param array $form
+ * @param array $form_state 
+ */
+function bibdk_searchhistory_form_submit($form, $form_state) {
+  $searches = $form_state['values']['bibdk_search_history_table'];
+  global $user;
+  $uid = $user->uid;
+  foreach ($searches as $search => $key) {
+    if ($search) {
+      if (array_key_exists($key, $_SESSION['searches'])) {
+        unset($_SESSION['searches'][$key]);
+      }
+      $entry = array(
+        'uid' => (int) $uid,
+        'string' => $key,
+      );
+      bibdk_searchhistory_delete_saved_search($entry);
+    }
+  }
+  drupal_goto('search'); //redirects to basix search page otherwise user will get redirected to /search/ting/"search-string" and the user will perform a new search that will get added to searchhistory
+}
+
+function bibdk_searchhistory_form_combine($form, $form_state) {
+  dvm('hello');
+}
+
+/**
  * Retreives searches stored in current session and returns them
  * @param int $logged_in
  * @param array $session_history
  * @return array 
  */
 function bibdk_searchhistory_get_session_searches($logged_in, $session_history) {
-    $searches = array_reverse($_SESSION['searches']);
-    foreach ($searches as $key) {
-      if (!array_key_exists($key['string'], $session_history)) {
-        $string = $key['string'];
-        $count = $key['count'];
+  $searches = array_reverse($_SESSION['searches']);
+  foreach ($searches as $key) {
+    if (!array_key_exists($key['string'], $session_history)) {
+      $string = $key['string'];
+      $count = $key['count'];
 
-        $link = 'search/ting/' . $string;
-        $session_history[$string] = array(
-          'search_string' => l($string, $link),
-          'result_count' => $count,
-        );
+      $link = 'search/ting/' . $string;
+      $session_history[$string] = array(
+        'search_string' => l($string, $link),
+        'result_count' => $count,
+      );
 
-        if ($logged_in) { //Only logged in users should be given the option to save their searches
-          $timestamp = $key['timestamp'];
-          $button = array(
-            '#type' => 'button',
-            '#value' => t('Add'),
-            '#attributes' => array(
-              'class' => array(
-                'memo-list-btn',
-              ),
-              'data-timestamp' => $timestamp,
-              'data-string' => $string,
-              'data-count' => $count,
+      if ($logged_in) { //Only logged in users should be given the option to save their searches
+        $timestamp = $key['timestamp'];
+        $button = array(
+          '#type' => 'button',
+          '#value' => t('Add'),
+          '#attributes' => array(
+            'class' => array(
+              'memo-list-btn',
             ),
-          );
-          $session_history[$string]['memolist'] = drupal_render($button);
-        }
+            'data-timestamp' => $timestamp,
+            'data-string' => $string,
+            'data-count' => $count,
+          ),
+        );
+        $session_history[$string]['memolist'] = drupal_render($button);
       }
     }
+  }
   return $session_history;
 }
 
@@ -300,12 +334,11 @@ function bibdk_searchhistory_save_search($entry) {
 function bibdk_searchhistory_delete_saved_search($entry) {
   try {
     db_delete('bibdk_searchhistory_memolist')
-        ->condition('timestamp', $entry['timestamp'])
         ->condition('uid', $entry['uid'])
         ->condition('string', $entry['string'])
-        ->condition('count', $entry['count'])
         ->execute();
   } catch (Exception $e) {
+    dvm('exception');
     echo t('Could not delete entry from database. Please reload the page and try again. Error logged.');
     watchdog(WATCHDOG_ERROR, $e);
   }
