@@ -195,7 +195,6 @@ function bibdk_searchhistory_form_submit($form, $form_state) {
 }
 
 function bibdk_searchhistory_form_combine($form, $form_state) {
-  dvm('hello');
 }
 
 /**
@@ -338,7 +337,6 @@ function bibdk_searchhistory_delete_saved_search($entry) {
         ->condition('string', $entry['string'])
         ->execute();
   } catch (Exception $e) {
-    dvm('exception');
     echo t('Could not delete entry from database. Please reload the page and try again. Error logged.');
     watchdog(WATCHDOG_ERROR, $e);
   }
