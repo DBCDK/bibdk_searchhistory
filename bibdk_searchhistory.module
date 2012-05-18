@@ -127,7 +127,12 @@ function bibdk_searchhistory_form($form) {
     '#empty' => t('No searches executed yet'),
     '#js_select' => TRUE,
     '#multiple' => TRUE,
-    '#default_value' => array(), //$session_history,
+    '#default_value' => array(),
+    '#attributes' => array(
+      'class' => array(
+        'combine-select'
+      ),
+    ),
   );
 
   $radios = array(0 => t('Combine "And"'), 1 => t('Combine "Or"'));
@@ -137,16 +142,11 @@ function bibdk_searchhistory_form($form) {
     '#options' => $radios,
   );
 
-  $form['bibdk_searchhistory_form']['save'] = array(
+  $form['bibdk_searchhistory_form']['delete'] = array(
     '#type' => 'submit',
-    '#value' => t('Save selected'),
+    '#value' => t('Delete selected'),
     '#executes_submit_callback' => TRUE,
-  );
-
-  $form['bibdk_searchhistory_form']['clear_history'] = array(
-    '#type' => 'button',
-    '#value' => t('Clear history'),
-    '#executes_submit_callback' => FALSE,
+    '#disabled' => TRUE,
   );
 
   $form['bibdk_searchhistory_form']['combine'] = array(
@@ -171,7 +171,6 @@ function bibdk_searchhistory_form($form) {
  * @return array 
  */
 function bibdk_searchhistory_get_session_searches($logged_in, $session_history) {
-  if (count($_SESSION['searches']) >= 0) {
     $searches = array_reverse($_SESSION['searches']);
     foreach ($searches as $key) {
       if (!array_key_exists($key['string'], $session_history)) {
@@ -186,11 +185,22 @@ function bibdk_searchhistory_get_session_searches($logged_in, $session_history) 
 
         if ($logged_in) { //Only logged in users should be given the option to save their searches
           $timestamp = $key['timestamp'];
-          $session_history[$string]['memolist'] = drupal_render(drupal_get_form('bibdk_searchhistory_memolist_checkbox', $string, $count, $timestamp));
+          $button = array(
+            '#type' => 'button',
+            '#value' => t('Add'),
+            '#attributes' => array(
+              'class' => array(
+                'memo-list-btn',
+              ),
+              'data-timestamp' => $timestamp,
+              'data-string' => $string,
+              'data-count' => $count,
+            ),
+          );
+          $session_history[$string]['memolist'] = drupal_render($button);
         }
       }
     }
-  }
   return $session_history;
 }
 
@@ -215,10 +225,24 @@ function bibdk_searchhistory_get_saved_searches($uid) {
       $timestamp = $row->timestamp;
 
       $link = 'search/ting/' . $string;
+      $button = array(
+        '#type' => 'button',
+        '#value' => t('Remove'),
+        '#attributes' => array(
+          'class' => array(
+            'memo-list-btn',
+          ),
+          'data-saved' => TRUE,
+          'data-timestamp' => $timestamp,
+          'data-string' => $string,
+          'data-count' => $count,
+        ),
+      );
+
       $saved[$string] = array(
         'search_string' => l($string, $link),
         'result_count' => $count,
-        'memolist' => drupal_render(drupal_get_form('bibdk_searchhistory_memolist_checkbox', $string, $count, $timestamp, 1)),
+        'memolist' => drupal_render($button),
       );
     }
   }
@@ -226,38 +250,13 @@ function bibdk_searchhistory_get_saved_searches($uid) {
 }
 
 /**
- * Returns a checkbox form array
- * @param array $form
- * @param array $form_state
- * @param string $string
- * @param int $count
- * @param int $timestamp
- * @param Boolean $checked
- * @return $form array 
- */
-function bibdk_searchhistory_memolist_checkbox($form, $form_state, $string, $count, $timestamp, $checked = 0) {
-  $form['bibdk_searchhistory_memolist_checkboxes'][$string] = array(
-    '#type' => 'checkbox',
-    '#name' => $string,
-    '#default_value' => $checked,
-    '#attributes' => array(
-      'class' => array('memolist-check'),
-      'string' => $string,
-      'count' => $count,
-      'timestamp' => $timestamp,
-    ),
-  );
-  return $form;
-}
-
-/**
- * Callback function called when a checkbox in the memolist column is changed
+ * Callback function called when a button in the memolist column is clicked
  * @global Array $user used to detect whether we have logged in user or not
- * @param String $string the search string the clicked checkbox represents
- * @param int $count the result count the clicked checkbox represents
+ * @param String $string the search string the clicked button represents
+ * @param int $count the resultcount the clicked button represents
  * @return Mixed
  */
-function bibdk_searchhistory_memoitem_change_callback($string, $count, $val, $timestamp) {
+function bibdk_searchhistory_memoitem_change_callback($string, $save, $count, $timestamp) {
   global $user;
   $uid = $user->uid;
 
@@ -271,7 +270,7 @@ function bibdk_searchhistory_memoitem_change_callback($string, $count, $val, $ti
     'count' => $count,
   );
 
-  if ($val) {
+  if ($save) {
     bibdk_searchhistory_save_search($entry);
   }
   else {

@@ -10,41 +10,54 @@
         attach: function(context) {
             var basePath = Drupal.settings.basePath;
             var currentItem;
-            var checked
+            var shouldSave;
             
-            $('.memolist-check').change(function(){ 
+            //memolist stuff
+            $('.memo-list-btn').click(function(){
+                
                 currentItem = $(this);
-                $('.memolist-check').attr('disabled', true);
+                $('.memo-list-btn').attr('disabled', 1);
+                var string = currentItem.attr('data-string');
+                var count = currentItem.attr('data-count');
+                var timestamp = currentItem.attr('data-timestamp');
+                var saved = currentItem.attr('data-saved');
                 
-                var string = $(this).attr('string');
-                var count = $(this).attr('count');
-                var timestamp = $(this).attr('timestamp');
+                shouldSave = 1;
                 
-                checked = 0;
-                if($(this).attr('checked')){
-                    checked = 1;
+                if(saved){
+                    shouldSave = 0;
                 }
                 
-                var url = "bibdk_searchhistory/memoitemchanged/" + string + "/" + count + "/" + checked + "/" + timestamp;
+                var url = "bibdk_searchhistory/memoitemchanged/" + string + "/" + shouldSave + "/" + count + "/" + timestamp;
+                
+                console.log(url);
                 jQuery.ajax({
                     type: 'GET',
                     url:basePath + url,
                     success: onResponse
                 });
+                
+                return false;
             });
             
             function onResponse(data){
+                console.log(data);
                 if(data){
                     alert(data);
-                    if(checked){
-                        currentItem.attr('checked', false);
-                    } else {
-                        currentItem.attr('checked', true);
-                    }
                 }
-                $('.memolist-check').removeAttr('disabled');
+                Drupal.t
+                if(shouldSave){
+                    currentItem.attr('data-saved', 1);
+                    currentItem.attr('value', Drupal.t('Remove'));
+                } else {
+                    currentItem.removeAttr('data-saved');
+                    currentItem.attr('value', Drupal.t('Add'));
+                }
+                $('.memo-list-btn').removeAttr('disabled');
+                
+                
                 currentItem = null;
-                checked = null;
+                selected = null;
             }
         }
     };
