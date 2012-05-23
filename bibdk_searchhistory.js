@@ -29,21 +29,20 @@
                 }
                 
                 var url = "bibdk_searchhistory/memoitemchanged/" + string + "/" + shouldSave + "/" + count + "/" + timestamp;
+                url = escape(url);
                 
-                console.log(url);
                 jQuery.ajax({
                     type: 'GET',
                     url:basePath + url,
                     success: onResponse
                 });
-                
                 return false;
             });
             
             function onResponse(data){
-                console.log(data);
                 if(data){
                     alert(data);
+                        
                 }
 
                 if(shouldSave){
@@ -75,16 +74,17 @@
             function countSelected(){
                 var b = $('td div .combine-select');                
                 
-                var count = b.filter(':checked').length;          
+                var count = b.filter(':checked').length;
                 
                 if(count >= 1){
-                    $('#edit-delete').removeAttr('disabled');    
+                    $('#edit-delete').removeAttr('disabled');
+                    $('#edit-combine').attr('disabled', 1);
                     if(count >= 2){
                         $('#edit-combine').removeAttr('disabled');    
                     }
                 } else {
                     $('#edit-delete').attr('disabled', 1);
-                    $('#edit-combine').attr('disabled', 1);   
+                    $('#edit-combine').attr('disabled', 1);
                 }
             }
             
