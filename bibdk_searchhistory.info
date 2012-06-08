@@ -3,7 +3,5 @@ description = "Gives the user the ability to save and reuse old search queries. 
 package = "Bibliotek.dk"
 ;dependencies[] = ting_search
 core = 7.x
- 
-files[] = bibdk_searchhistory.install
-files[] = bibdk_searchhistory.module
-files[] = bibdk_searchhistory.test
+
+;files[] = bibdk_searchhistory.test
