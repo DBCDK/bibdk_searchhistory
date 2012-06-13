@@ -20,7 +20,7 @@ function bibdk_searchhistory_block_info() {
 
 /**
  * Implements hook_menu().
- * Sets up menu items for javascript callbacks.
+ * Sets up menu items.
  *
  */
 function bibdk_searchhistory_menu() {
@@ -57,7 +57,7 @@ function bibdk_searchhistory_block_configure($delta) {
         '#title' => t('Highest number of saved searches'),
         '#size' => 5,
         '#description' => t('Number of saved searches. When exceeded will the oldest unsaved searches be deleted - 0 = unlimited'),
-        '#default_value' => variable_get('search_history_save_limit', 50),
+        '#default_value' => variable_get('search_history_save_limit', 0),
       );
       break;
   }
@@ -85,10 +85,20 @@ function bibdk_searchhistory_block_save($delta = '', $edit = array()) {
 function bibdk_searchhistory_block_view($delta = '') {
   switch ($delta) {
     case 'bibdk_search_history':
-      $block['subject'] = t('Search history');
+      $block['subject'] = t('My searches');
       $block['content'] = drupal_get_form('bibdk_searchhistory_form');
       return $block;
       break;
+  }
+}
+
+/**
+ * Implement hook_ctools_plugin_api().
+ *
+ */
+function bibdk_searchhistory_ctools_plugin_api($module, $api) {
+  if ($module == 'page_manager' && $api == 'pages_default') {
+    return array('version' => 1);
   }
 }
 
@@ -316,7 +326,7 @@ function bibdk_searchhistory_memoitem_change_callback($string, $save, $count, $t
   $entry = array(
     'timestamp' => $timestamp,
     'uid' => (int) $uid,
-    'string' => (String)$string,
+    'string' => (String) $string,
     'count' => $count,
   );
 
@@ -325,7 +335,7 @@ function bibdk_searchhistory_memoitem_change_callback($string, $save, $count, $t
   }
   else {
     bibdk_searchhistory_delete_saved_search($entry);
-  } 
+  }
 }
 
 /**
