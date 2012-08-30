@@ -1,9 +1,20 @@
 <?php
-
 /**
  * @file
  * Adding support for saving and reuse of old searches
  */
+
+
+/**
+ * Impelements user_profile_tabs (@see ding_user.module)
+ **/
+function bibdk_searchhistory_user_profile2_tabs () {
+  $ret->label = t('searchhistory');
+  $ret->form = 'bibdk_searchhistory_form';
+  $ret->type = 'bibdk_search_history';
+
+  return $ret;
+}
 
 /**
  * Implements hook_block_info();
@@ -50,7 +61,7 @@ function bibdk_searchhistory_block_configure($delta) {
         '#description' => t('Enter the number of search results shown to the user on each page - 0 = unlimited'),
         '#default_value' => variable_get('search_history_count', 0),
         );
-       * 
+       *
        */
       $form['search_history_save_limit'] = array(
         '#type' => 'textfield',
@@ -66,7 +77,7 @@ function bibdk_searchhistory_block_configure($delta) {
 }
 
 /**
- * Implements hook_block_save(). 
+ * Implements hook_block_save().
  */
 function bibdk_searchhistory_block_save($delta = '', $edit = array()) {
   switch ($delta) {
@@ -183,7 +194,7 @@ function bibdk_searchhistory_form($form) {
  * form callback function. Removes selcted entries from $_SESSION['searches] array and deletes posts in db if necessary
  * @global Array $user
  * @param array $form
- * @param array $form_state 
+ * @param array $form_state
  */
 function bibdk_searchhistory_form_submit($form, &$form_state) {
   $searches = $form_state['values']['bibdk_search_history_table'];
@@ -227,7 +238,7 @@ function bibdk_searchhistory_combine($form, $form_state) {
  * Retreives searches stored in current session and returns them
  * @param int $logged_in
  * @param array $session_history
- * @return array 
+ * @return array
  */
 function bibdk_searchhistory_get_session_searches($logged_in, $session_history) {
   $searches = array_reverse($_SESSION['searches']);
@@ -266,7 +277,7 @@ function bibdk_searchhistory_get_session_searches($logged_in, $session_history) 
 /**
  * Retreives the saved searches from the database for the given user id
  * @param int $uid - user id
- * @return array 
+ * @return array
  */
 function bibdk_searchhistory_get_saved_searches($uid) {
   $query = db_select('bibdk_searchhistory_memolist', 'saved');
@@ -340,7 +351,7 @@ function bibdk_searchhistory_memoitem_change_callback($string, $save, $count, $t
 
 /**
  * Saves $entry to bibdk_searchhistory_memolist to database. Throws error and asks tyhe user to reload if for some reason an error should occur
- * @param type $entry 
+ * @param type $entry
  */
 function bibdk_searchhistory_save_search($entry) {
   $error = bibdk_searchhistory_check_search_in_session($entry['string'], $entry['count']); //ensure that the search have actual been excuted and no variables have been manipulated before posting to db
@@ -363,7 +374,7 @@ function bibdk_searchhistory_save_search($entry) {
  * checks if the search exsist in $_SESSION['searches'] to validate that the arguments have not been manipulated
  * @param String $string
  * @param int $count
- * @return string|boolean 
+ * @return string|boolean
  */
 function bibdk_searchhistory_check_search_in_session($string, $count) {
   $searches = $_SESSION['searches'];
@@ -381,7 +392,7 @@ function bibdk_searchhistory_check_search_in_session($string, $count) {
 
 /**
  * Deletes $entry to bibdk_searchhistory_memolist to database. Throws error and asks tyhe user to reload if for some reason an error should occur
- * @param type $entry 
+ * @param type $entry
  */
 function bibdk_searchhistory_delete_saved_search($entry) {
   try {
@@ -430,7 +441,7 @@ function _bibdk_searchhistory_check_session() {
 /**
  * Helper function to check if any results is returnes
  * @param ting_object$searchsresult
- * @return int $count 
+ * @return int $count
  */
 function _bibdk_searchhistory_check_searchresult($searchsresult) {
   $count = 0;
