@@ -9,9 +9,9 @@
  * Implements hook_schema().
  *
  */
-  
+
 function bibdk_searchhistory_schema(){
-  
+
   $schema['bibdk_searchhistory_memolist'] = array(
     'description' => 'Stores searches added to memolist by users',
     'fields' => array(
@@ -51,7 +51,23 @@ function bibdk_searchhistory_schema(){
       'uid' => array('uid'),
     ),
   );
-   
+
 
   return $schema;
+}
+
+/**
+ * Implements hook_disable;
+ * delete the profile type defined in this module
+ **/
+function bibdk_searchhistory_disable() {
+  if( function_exists( 'bibdk_searchhistory_user_profile2_tabs' ) ) {
+    $function = 'bibdk_searchhistory_user_profile2_tabs';
+    $profile = call_user_func($function);
+
+    $profile_type = profile2_get_types($profile->type);
+    if( !empty($profile_type) ) {
+      profile2_type_delete($profile_type);
+    }
+  }
 }
