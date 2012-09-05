@@ -224,9 +224,13 @@ function bibdk_searchhistory_form_submit($form, &$form_state) {
   $uid = $user->uid;
   foreach ($searches as $search => $key) {
     if ($search) {
+      _bibdk_searchhistory_remove_from_session($key);
+      /*
       if (array_key_exists($key, $_SESSION['searches'])) {
         unset($_SESSION['searches'][$key]);
       }
+       * 
+       */
       $entry = array(
         'uid' => (int) $uid,
         'string' => $key,
@@ -235,6 +239,12 @@ function bibdk_searchhistory_form_submit($form, &$form_state) {
     }
   }
   drupal_goto('searchhistory'); //redirects to basic search page otherwise user will be redirected to /search/ting/"search-string" and the user will perform a new search that will be added to searchhistory
+}
+
+function _bibdk_searchhistory_remove_from_session($string){
+  if (array_key_exists($string, $_SESSION['searches'])) {
+        unset($_SESSION['searches'][$string]);
+      }
 }
 
 function bibdk_searchhistory_combine($form, $form_state) {
@@ -365,6 +375,7 @@ function bibdk_searchhistory_memoitem_change_callback($string, $save, $count, $t
 
   if ($save) {
     bibdk_searchhistory_save_search($entry);
+    _bibdk_searchhistory_remove_from_session($string);
   }
   else {
     bibdk_searchhistory_delete_saved_search($entry);
