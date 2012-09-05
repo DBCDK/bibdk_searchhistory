@@ -1,14 +1,14 @@
 <?php
+
 /**
  * @file
  * Adding support for saving and reuse of old searches
  */
 
-
 /**
  * Impelements user_profile_tabs (@see ding_user.module)
- **/
-function bibdk_searchhistory_user_profile2_tabs () {
+ * */
+function bibdk_searchhistory_user_profile2_tabs() {
   $ret->label = t('searchhistory');
   $ret->form = 'bibdk_searchhistory_form';
   $ret->type = 'bibdk_search_history';
@@ -42,13 +42,34 @@ function bibdk_searchhistory_menu() {
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );
+  $items['admin/config/search/bibdk_searchhistory'] = array(
+    'title' => 'Bibdk search history',
+    'description' => 'Settings for display of search history',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bibdk_searchhistory_admin'),
+    'access arguments' => array('administer bibdk search history settings'),
+    'file' => 'includes/bibdk_searchhistory_settings.admin.inc',
+  );
 
   return $items;
 }
 
 /**
+ * Implements hook_permission().
+ */
+function bibdk_searchhistory_permission() {
+  return array(
+    'administer bibdk search history settings' => array(
+      'title' => t('Administer search history settings'),
+      'description' => t('Allow users to modify settings for search history'),
+    ),
+  );
+}
+
+/**
  * Implements hook_block_configure();
  */
+/*
 function bibdk_searchhistory_block_configure($delta) {
   $form = array();
   switch ($delta) {
@@ -63,18 +84,20 @@ function bibdk_searchhistory_block_configure($delta) {
         );
        *
        */
+/*
       $form['search_history_save_limit'] = array(
         '#type' => 'textfield',
         '#title' => t('Highest number of saved searches'),
         '#size' => 5,
         '#description' => t('Number of saved searches. When exceeded will the oldest unsaved searches be deleted - 0 = unlimited'),
-        '#default_value' => variable_get('search_history_save_limit', 0),
+        '#default_value' => variable_get('search_history_save_limit', 25),
       );
       break;
   }
 
   return $form;
 }
+*/
 
 /**
  * Implements hook_block_save().
@@ -131,7 +154,6 @@ function bibdk_searchhistory_form($form) {
 
   $session_history = array();
 
-//Only logged in users should be given the option to save their searches
   if ($logged_in) {
     $header['memolist'] = t('Memolist');
     $session_history = bibdk_searchhistory_get_saved_searches($logged_in);
@@ -212,7 +234,7 @@ function bibdk_searchhistory_form_submit($form, &$form_state) {
       bibdk_searchhistory_delete_saved_search($entry);
     }
   }
-  drupal_goto('search'); //redirects to basic search page otherwise user will be redirected to /search/ting/"search-string" and the user will perform a new search that will be added to searchhistory
+  drupal_goto('searchhistory'); //redirects to basic search page otherwise user will be redirected to /search/ting/"search-string" and the user will perform a new search that will be added to searchhistory
 }
 
 function bibdk_searchhistory_combine($form, $form_state) {
@@ -415,7 +437,7 @@ function bibdk_searchhistory_set_search_results($keys, $searchsresult) {
   _bibdk_searchhistory_check_session();
 
   $limit = (int) variable_get('search_history_save_limit');
-  if (count($_SESSION['searches']) >= $limit && !array_key_exists($keys, $_SESSION['searches'])) {
+  if (count($_SESSION['searches']) >= $limit && !array_key_exists($keys, $_SESSION['searches']) && $limit > 0) {
     array_shift($_SESSION['searches']);
   }
 
