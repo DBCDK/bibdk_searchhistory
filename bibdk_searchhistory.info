@@ -4,4 +4,4 @@ package = "Bibliotek.dk"
 ;dependencies[] = ting_search
 core = 7.x
 
-;files[] = bibdk_searchhistory.test
+files[] = bibdk_searchhistory.test
