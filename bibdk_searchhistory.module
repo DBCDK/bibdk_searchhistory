@@ -238,7 +238,7 @@ function bibdk_searchhistory_form_submit($form, &$form_state) {
       bibdk_searchhistory_delete_saved_search($entry);
     }
   }
-  drupal_goto('searchhistory'); //redirects to basic search page otherwise user will be redirected to /search/ting/"search-string" and the user will perform a new search that will be added to searchhistory
+  drupal_goto('searchhistory'); //redirects to basic search page otherwise user will be redirected to /search/work/"search-string" and the user will perform a new search that will be added to searchhistory
 }
 
 function _bibdk_searchhistory_remove_from_session($string){
@@ -263,7 +263,7 @@ function bibdk_searchhistory_combine($form, $form_state) {
     $new_string .= $combined[$i];
   }
 
-  drupal_goto('search/ting/' . $new_string);
+  drupal_goto('search/work/' . $new_string);
 }
 
 /**
@@ -279,7 +279,7 @@ function bibdk_searchhistory_get_session_searches($logged_in, $session_history) 
       $string = $key['string'];
       $count = $key['count'];
 
-      $link = 'search/ting/' . $string;
+      $link = 'search/work/' . $string;
       $session_history[$string] = array(
         'search_string' => l($string, $link),
         'result_count' => $count,
@@ -326,7 +326,7 @@ function bibdk_searchhistory_get_saved_searches($uid) {
       $count = $row->count;
       $timestamp = $row->timestamp;
 
-      $link = 'search/ting/' . $string;
+      $link = 'search/work/' . $string;
       $button = array(
         '#type' => 'button',
         '#value' => t('Remove'),
