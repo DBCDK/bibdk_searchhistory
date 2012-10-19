@@ -1,0 +1,47 @@
+<?php
+
+/**
+ * @file
+ * Tets class intented to act as simpletest for the bibdk_searchhistory module
+ */
+
+class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
+
+  /**
+   *Info for this test case
+   */
+  public function getInfo(){
+    return array(
+      'name' => 'Bibdk Search History functionality',
+      'description' => t('Test the functionality of Bibdk Search History'),
+      'group' => 'bibliotek.dk',
+    );
+  }
+
+  public function setUp() {
+    $this->profile = 'bibdk';
+    parent::setUp(array('ding_user', 'profile2', 'ding_provider', 'bibdk_test_provider', 'bibdk_searchhistory'));
+  }
+
+   // check if profiletype is deleted when module is disabled and created after module has been enabled
+  // and user logs in.
+  function testCheckProfileTypeDelete(){
+    //first disable module
+    module_disable(array('bibdk_searchhistory'));
+    $profile_type = 'bibdk_search_history';
+    $type = profile2_get_types($profile_type);
+    // assert that profiletype does not exist
+    $this->assertFalse($type);
+
+    // enable module
+    module_enable(array('bibdk_searchhistory'));
+    // we have to submit the user_login_block form to log in as provider user
+    $edit['name'] = 'hest@gmail.com';
+    $edit['pass'] = 'hest';
+    $this->drupalPost('user', $edit, 'Log in', array(), array(), 'user-login', NULL );
+
+    // assert that the profiletype has been created
+    $type = profile2_get_types($profile_type);
+    $this->assertEqual($type->type,$profile_type);
+  }
+}

@@ -1,0 +1,497 @@
+<?php
+
+/**
+ * @file
+ * Adding support for saving and reuse of old searches
+ */
+
+/**
+ * Impelements user_profile_tabs (@see ding_user.module)
+ * */
+function bibdk_searchhistory_user_profile2_tabs() {
+  $ret->label = t('searchhistory');
+  $ret->form = 'bibdk_searchhistory_form';
+  $ret->type = 'bibdk_search_history';
+
+  return $ret;
+}
+
+/**
+ * Implements hook_block_info();
+ */
+function bibdk_searchhistory_block_info() {
+  $blocks['bibdk_search_history'] = array(
+    'info' => t('Bibdk search history'),
+    'Description' => t('Displaying the current users search history'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_menu().
+ * Sets up menu items.
+ *
+ */
+function bibdk_searchhistory_menu() {
+  $items = array();
+  $items['bibdk_searchhistory/memoitemchanged/%/%/%/%'] = array(
+    'page callback' => 'bibdk_searchhistory_memoitem_change_callback',
+    'page arguments' => array(2, 3, 4, 5),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/config/search/bibdk_searchhistory'] = array(
+    'title' => 'Bibdk search history',
+    'description' => 'Settings for display of search history',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bibdk_searchhistory_admin'),
+    'access arguments' => array('administer bibdk search history settings'),
+    'file' => 'includes/bibdk_searchhistory_settings.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function bibdk_searchhistory_permission() {
+  return array(
+    'administer bibdk search history settings' => array(
+      'title' => t('Administer search history settings'),
+      'description' => t('Allow users to modify settings for search history'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_block_configure();
+ */
+/*
+function bibdk_searchhistory_block_configure($delta) {
+  $form = array();
+  switch ($delta) {
+    case 'bibdk_search_history':
+      /* //TODO add pager to table and the ability to change number of results on each page in config
+        $form['search_history_count'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Number of results shown on each page'),
+        '#size' => 5,
+        '#description' => t('Enter the number of search results shown to the user on each page - 0 = unlimited'),
+        '#default_value' => variable_get('search_history_count', 0),
+        );
+       *
+       */
+/*
+      $form['search_history_save_limit'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Highest number of saved searches'),
+        '#size' => 5,
+        '#description' => t('Number of saved searches. When exceeded will the oldest unsaved searches be deleted - 0 = unlimited'),
+        '#default_value' => variable_get('search_history_save_limit', 25),
+      );
+      break;
+  }
+
+  return $form;
+}
+*/
+
+/**
+ * Implements hook_block_save().
+ */
+function bibdk_searchhistory_block_save($delta = '', $edit = array()) {
+  switch ($delta) {
+    case 'bibdk_search_history':
+      #variable_set('search_history_count', (int) abs($edit['search_history_count']));
+      variable_set('search_history_save_limit', (int) abs($edit['search_history_save_limit']));
+      break;
+  }
+
+  return;
+}
+
+/**
+ * Implements hook_block_view();
+ */
+function bibdk_searchhistory_block_view($delta = '') {
+  switch ($delta) {
+    case 'bibdk_search_history':
+      $block['subject'] = t('My searches');
+      $block['content'] = drupal_get_form('bibdk_searchhistory_form');
+      return $block;
+      break;
+  }
+}
+
+/**
+ * Implement hook_ctools_plugin_api().
+ *
+ */
+function bibdk_searchhistory_ctools_plugin_api($module, $api) {
+  if ($module == 'page_manager' && $api == 'pages_default') {
+    return array('version' => 1);
+  }
+}
+
+/**
+ * Create the tableselect form with searchresults and possibly saved searches
+ * @param type $form
+ * @return array $form
+ */
+function bibdk_searchhistory_form($form) {
+  _bibdk_searchhistory_check_session();
+
+  global $user;
+  $logged_in = $user->uid;
+
+  $header = array(
+    'search_string' => t('Search string'),
+    'result_count' => t('Result count'),
+  );
+
+  $session_history = array();
+
+  if ($logged_in) {
+    $header['memolist'] = t('Memolist');
+    $session_history = bibdk_searchhistory_get_saved_searches($logged_in);
+  }
+
+  $session_history = bibdk_searchhistory_get_session_searches($logged_in, $session_history);
+
+  $form['bibdk_searchhistory_form']['bibdk_search_history_table'] = array(
+    '#type' => 'tableselect',
+    '#header' => $header,
+    '#options' => $session_history,
+    '#empty' => t('No searches executed yet'),
+    '#js_select' => TRUE,
+    '#tree' => TRUE,
+    '#multiple' => TRUE,
+    '#default_value' => array(),
+    '#attributes' => array(
+      'class' => array(
+        'combine-select'
+      ),
+    ),
+  );
+
+  $radios = array(' og ' => t('Combine "And"'), ' eller ' => t('Combine "Or"'));
+
+  $form['bibdk_searchhistory_form']['and_or_radios'] = array(
+    '#type' => 'radios',
+    '#options' => $radios,
+    '#default_value' => ' og ',
+  );
+
+  $form['bibdk_searchhistory_form']['delete'] = array(
+    '#type' => 'submit',
+    '#value' => t('Delete selected'),
+    '#executes_submit_callback' => TRUE,
+    '#attributes' => array(
+      'disabled' => TRUE
+    ),
+  );
+
+  $form['bibdk_searchhistory_form']['combine'] = array(
+    '#type' => 'submit',
+    '#value' => t('Combine'),
+    '#executes_submit_callback' => TRUE,
+    '#submit' => array('bibdk_searchhistory_combine'),
+    '#attributes' => array(
+      'disabled' => TRUE
+    ),
+  );
+
+//Adding JavaScript
+  $form['#attached']['js'] = array(
+    drupal_get_path('module', 'bibdk_searchhistory') . '/bibdk_searchhistory.js',
+  );
+
+  return $form;
+}
+
+/**
+ * form callback function. Removes selcted entries from $_SESSION['searches] array and deletes posts in db if necessary
+ * @global Array $user
+ * @param array $form
+ * @param array $form_state
+ */
+function bibdk_searchhistory_form_submit($form, &$form_state) {
+  $searches = $form_state['values']['bibdk_search_history_table'];
+  global $user;
+  $uid = $user->uid;
+  foreach ($searches as $search => $key) {
+    if ($search) {
+      _bibdk_searchhistory_remove_from_session($key);
+      /*
+      if (array_key_exists($key, $_SESSION['searches'])) {
+        unset($_SESSION['searches'][$key]);
+      }
+       * 
+       */
+      $entry = array(
+        'uid' => (int) $uid,
+        'string' => $key,
+      );
+      bibdk_searchhistory_delete_saved_search($entry);
+    }
+  }
+  drupal_goto('searchhistory'); //redirects to basic search page otherwise user will be redirected to /search/work/"search-string" and the user will perform a new search that will be added to searchhistory
+}
+
+function _bibdk_searchhistory_remove_from_session($string){
+  if (array_key_exists($string, $_SESSION['searches'])) {
+        unset($_SESSION['searches'][$string]);
+      }
+}
+
+function bibdk_searchhistory_combine($form, $form_state) {
+  $searches = $form_state['values']['bibdk_search_history_table'];
+  $combined = array();
+  $combinator = $form_state['values']['and_or_radios'];
+  foreach ($searches as $search => $string) {
+    if ($string) {
+      $combined[] = $string;
+    }
+  }
+
+  $new_string = $combined[0];
+  for ($i = 1; $i < count($combined); $i++) {
+    $new_string .= $combinator;
+    $new_string .= $combined[$i];
+  }
+
+  drupal_goto('search/work/' . $new_string);
+}
+
+/**
+ * Retreives searches stored in current session and returns them
+ * @param int $logged_in
+ * @param array $session_history
+ * @return array
+ */
+function bibdk_searchhistory_get_session_searches($logged_in, $session_history) {
+  $searches = array_reverse($_SESSION['searches']);
+  foreach ($searches as $key) {
+    if (!array_key_exists($key['string'], $session_history)) {
+      $string = $key['string'];
+      $count = $key['count'];
+
+      $link = 'search/work/' . $string;
+      $session_history[$string] = array(
+        'search_string' => l($string, $link),
+        'result_count' => $count,
+      );
+
+      if ($logged_in) { //Only logged in users should be given the option to save their searches
+        $timestamp = $key['timestamp'];
+        $button = array(
+          '#type' => 'button',
+          '#value' => t('Add'),
+          '#attributes' => array(
+            'class' => array(
+              'memo-list-btn',
+            ),
+            'data-timestamp' => $timestamp,
+            'data-string' => $string,
+            'data-count' => $count,
+          ),
+        );
+        $session_history[$string]['memolist'] = drupal_render($button);
+      }
+    }
+  }
+  return $session_history;
+}
+
+/**
+ * Retreives the saved searches from the database for the given user id
+ * @param int $uid - user id
+ * @return array
+ */
+function bibdk_searchhistory_get_saved_searches($uid) {
+  $query = db_select('bibdk_searchhistory_memolist', 'saved');
+  $query->fields('saved', array('timestamp', 'string', 'count'));
+  $query->condition('uid', $uid);
+  $query->orderBy('timestamp', 'DESC');
+  $result = $query->execute();
+
+  $saved = array();
+  if (count($result) >= 0) {
+    foreach ($result as $row) {
+
+      $string = $row->string;
+      $count = $row->count;
+      $timestamp = $row->timestamp;
+
+      $link = 'search/work/' . $string;
+      $button = array(
+        '#type' => 'button',
+        '#value' => t('Remove'),
+        '#attributes' => array(
+          'class' => array(
+            'memo-list-btn',
+          ),
+          'data-saved' => TRUE,
+          'data-timestamp' => $timestamp,
+          'data-string' => $string,
+          'data-count' => $count,
+        ),
+      );
+
+      $saved[$string] = array(
+        'search_string' => l($string, $link),
+        'result_count' => $count,
+        'memolist' => drupal_render($button),
+      );
+    }
+  }
+  return $saved;
+}
+
+/**
+ * Callback function called when a button in the memolist column is clicked
+ * @global Array $user used to detect whether we have logged in user or not
+ * @param String $string the search string the clicked button represents
+ * @param int $count the resultcount the clicked button represents
+ * @return Mixed
+ */
+function bibdk_searchhistory_memoitem_change_callback($string, $save, $count, $timestamp) {
+  $string = utf8_encode(urldecode($string));
+  global $user;
+  $uid = $user->uid;
+
+  if (!$uid)
+    return; //If user is not logged in it should not be possible to save searches
+
+  $entry = array(
+    'timestamp' => $timestamp,
+    'uid' => (int) $uid,
+    'string' => (String) $string,
+    'count' => $count,
+  );
+
+  if ($save) {
+    bibdk_searchhistory_save_search($entry);
+    _bibdk_searchhistory_remove_from_session($string);
+  }
+  else {
+    bibdk_searchhistory_delete_saved_search($entry);
+  }
+}
+
+/**
+ * Saves $entry to bibdk_searchhistory_memolist to database. Throws error and asks tyhe user to reload if for some reason an error should occur
+ * @param type $entry
+ */
+function bibdk_searchhistory_save_search($entry) {
+  $error = bibdk_searchhistory_check_search_in_session($entry['string'], $entry['count']); //ensure that the search have actual been excuted and no variables have been manipulated before posting to db
+  if ($error) {
+    echo $error;
+  }
+  else {
+    try {
+      db_insert('bibdk_searchhistory_memolist')
+          ->fields($entry)
+          ->execute();
+    } catch (Exception $e) {
+      echo t('Could not add entry to database. Please reload the page and try again. Error logged.');
+      watchdog('bibdk searchhistory', $e);
+    }
+  }
+}
+
+/**
+ * checks if the search exsist in $_SESSION['searches'] to validate that the arguments have not been manipulated
+ * @param String $string
+ * @param int $count
+ * @return string|boolean
+ */
+function bibdk_searchhistory_check_search_in_session($string, $count) {
+  $searches = $_SESSION['searches'];
+  if (!array_key_exists($string, $searches)) {
+    $error = $string . t('Apparently the search you\'re trying to save haven\'t been executed in this session. Please refresh the page and try again.');
+    return $error;
+  }
+  else if ($searches[$string]['count'] != $count) {
+    $error = 'count: ' . $count . "vs.: " . $searches[$string]['count'];
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
+ * Deletes $entry to bibdk_searchhistory_memolist to database. Throws error and asks tyhe user to reload if for some reason an error should occur
+ * @param type $entry
+ */
+function bibdk_searchhistory_delete_saved_search($entry) {
+  try {
+    db_delete('bibdk_searchhistory_memolist')
+        ->condition('uid', $entry['uid'])
+        ->condition('string', $entry['string'])
+        ->execute();
+  } catch (Exception $e) {
+    echo t('Could not delete entry from database. Please reload the page and try again. Error logged.');
+    watchdog('bibdk searchhistory', $e);
+  }
+}
+
+/**
+ * Called from ting_search when a search is being executed. Saves the search string and number of results in the $_SESSION variable
+ * @param String $keys - searchstring
+ * @param int $searchsresult - result count
+ */
+function bibdk_searchhistory_set_search_results($keys, $searchsresult) {
+  _bibdk_searchhistory_check_session();
+
+  $limit = (int) variable_get('search_history_save_limit');
+  if (count($_SESSION['searches']) >= $limit && !array_key_exists($keys, $_SESSION['searches']) && $limit > 0) {
+    array_shift($_SESSION['searches']);
+  }
+
+  $timestamp = time();
+  $_SESSION['searches'][$keys]['string'] = $keys;
+  $_SESSION['searches'][$keys]['count'] = _bibdk_searchhistory_check_searchresult($searchsresult);
+  $_SESSION['searches'][$keys]['timestamp'] = $timestamp;
+}
+
+/**
+ * Helper function to check if the $_SESSION is available if not one is created.
+ */
+function _bibdk_searchhistory_check_session() {
+  if (!isset($_SESSION)) {
+    drupal_session_initialize();
+    $_SESSION['searches'] = array();
+  }
+  else if (!array_key_exists('searches', $_SESSION)) {
+    $_SESSION['searches'] = array();
+  }
+}
+
+/**
+ * Helper function to check if any results is returnes
+ * @param ting_object$searchsresult
+ * @return int $count
+ */
+function _bibdk_searchhistory_check_searchresult($searchsresult) {
+  $count = 0;
+  if ($searchsresult) {
+    $count = $searchsresult->numTotalObjects;
+  }
+  return $count;
+}
+
+/**
+ * Implements hook_user_delete().
+ * Deletes all search history entries in db connected to the deleted user.
+ * @param type $account
+ */
+function bibdk_searchhistory_user_delete($account) {
+  $uid = $account->uid;
+  db_delete('bibdk_searchhistory_memolist')
+      ->condition('uid', $uid)
+      ->execute();
+}
