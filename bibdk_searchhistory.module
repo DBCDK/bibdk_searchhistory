@@ -477,11 +477,12 @@ function _bibdk_searchhistory_check_session() {
  * @return int $count
  */
 function _bibdk_searchhistory_check_searchresult($searchsresult) {
-  $count = 0;
-  if ($searchsresult) {
-    $count = $searchsresult->numTotalObjects;
+  if (isset($searchsresult->numTotalObjects)) {
+    return $searchsresult->numTotalObjects;
   }
-  return $count;
+  else {
+    return 0;
+  }
 }
 
 /**
