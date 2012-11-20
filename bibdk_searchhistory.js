@@ -63,7 +63,7 @@
             //
             //header row
             $('.select-all').change(function () {
-                //window.setTimeout(countSelected, 100);
+                window.setTimeout(countSelected, 100);
             });
 
             //single rows
@@ -78,13 +78,13 @@
 
                 if (count >= 1) {
                     $('#edit-delete').removeAttr('disabled');
-                    $('#edit-combine').attr('disabled', 1);
+                    //$('#edit-combine').attr('disabled', 1);
                     if (count >= 2) {
-                        $('#edit-combine').removeAttr('disabled');
+                        //$('#edit-combine').removeAttr('disabled');
                     }
                 } else {
                     $('#edit-delete').attr('disabled', 1);
-                    $('#edit-combine').attr('disabled', 1);
+                    //$('#edit-combine').attr('disabled', 1);
                 }
             }
 
