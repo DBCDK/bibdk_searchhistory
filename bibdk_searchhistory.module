@@ -6,7 +6,8 @@
  */
 
 /**
- * Impelements user_profile_tabs (@see ding_user.module)
+ * Impelements user_profile_tabs (
+ * @see ding_user.module)
  * */
 function bibdk_searchhistory_user_profile2_tabs() {
   $ret->label = t('searchhistory');
@@ -106,7 +107,7 @@ function bibdk_searchhistory_block_save($delta = '', $edit = array()) {
   switch ($delta) {
     case 'bibdk_search_history':
       #variable_set('search_history_count', (int) abs($edit['search_history_count']));
-      variable_set('search_history_save_limit', (int) abs($edit['search_history_save_limit']));
+      variable_set('search_history_save_limit', (int)abs($edit['search_history_save_limit']));
       break;
   }
 
@@ -138,6 +139,7 @@ function bibdk_searchhistory_ctools_plugin_api($module, $api) {
 
 /**
  * Create the tableselect form with searchresults and possibly saved searches
+ *
  * @param type $form
  * @return array $form
  */
@@ -176,15 +178,15 @@ function bibdk_searchhistory_form($form) {
       ),
     ),
   );
+  /*
+    $radios = array(' og ' => t('Combine "And"'), ' eller ' => t('Combine "Or"'));
 
-  $radios = array(' og ' => t('Combine "And"'), ' eller ' => t('Combine "Or"'));
-
-  $form['bibdk_searchhistory_form']['and_or_radios'] = array(
-    '#type' => 'radios',
-    '#options' => $radios,
-    '#default_value' => ' og ',
-  );
-
+    $form['bibdk_searchhistory_form']['and_or_radios'] = array(
+      '#type' => 'radios',
+      '#options' => $radios,
+      '#default_value' => ' og ',
+    );
+  */
   $form['bibdk_searchhistory_form']['delete'] = array(
     '#type' => 'submit',
     '#value' => t('Delete selected'),
@@ -193,16 +195,17 @@ function bibdk_searchhistory_form($form) {
       'disabled' => TRUE
     ),
   );
-
-  $form['bibdk_searchhistory_form']['combine'] = array(
-    '#type' => 'submit',
-    '#value' => t('Combine'),
-    '#executes_submit_callback' => TRUE,
-    '#submit' => array('bibdk_searchhistory_combine'),
-    '#attributes' => array(
-      'disabled' => TRUE
-    ),
-  );
+  /*
+    $form['bibdk_searchhistory_form']['combine'] = array(
+      '#type' => 'submit',
+      '#value' => t('Combine'),
+      '#executes_submit_callback' => TRUE,
+      '#submit' => array('bibdk_searchhistory_combine'),
+      '#attributes' => array(
+        'disabled' => TRUE
+      ),
+    );
+  */
 
 //Adding JavaScript
   $form['#attached']['js'] = array(
@@ -214,6 +217,7 @@ function bibdk_searchhistory_form($form) {
 
 /**
  * form callback function. Removes selcted entries from $_SESSION['searches] array and deletes posts in db if necessary
+ *
  * @global Array $user
  * @param array $form
  * @param array $form_state
@@ -229,10 +233,10 @@ function bibdk_searchhistory_form_submit($form, &$form_state) {
       if (array_key_exists($key, $_SESSION['searches'])) {
         unset($_SESSION['searches'][$key]);
       }
-       * 
+       *
        */
       $entry = array(
-        'uid' => (int) $uid,
+        'uid' => (int)$uid,
         'string' => $key,
       );
       bibdk_searchhistory_delete_saved_search($entry);
@@ -241,10 +245,10 @@ function bibdk_searchhistory_form_submit($form, &$form_state) {
   drupal_goto('searchhistory'); //redirects to basic search page otherwise user will be redirected to /search/work/"search-string" and the user will perform a new search that will be added to searchhistory
 }
 
-function _bibdk_searchhistory_remove_from_session($string){
+function _bibdk_searchhistory_remove_from_session($string) {
   if (array_key_exists($string, $_SESSION['searches'])) {
-        unset($_SESSION['searches'][$string]);
-      }
+    unset($_SESSION['searches'][$string]);
+  }
 }
 
 function bibdk_searchhistory_combine($form, $form_state) {
@@ -268,6 +272,7 @@ function bibdk_searchhistory_combine($form, $form_state) {
 
 /**
  * Retreives searches stored in current session and returns them
+ *
  * @param int $logged_in
  * @param array $session_history
  * @return array
@@ -308,6 +313,7 @@ function bibdk_searchhistory_get_session_searches($logged_in, $session_history) 
 
 /**
  * Retreives the saved searches from the database for the given user id
+ *
  * @param int $uid - user id
  * @return array
  */
@@ -353,6 +359,7 @@ function bibdk_searchhistory_get_saved_searches($uid) {
 
 /**
  * Callback function called when a button in the memolist column is clicked
+ *
  * @global Array $user used to detect whether we have logged in user or not
  * @param String $string the search string the clicked button represents
  * @param int $count the resultcount the clicked button represents
@@ -363,13 +370,14 @@ function bibdk_searchhistory_memoitem_change_callback($string, $save, $count, $t
   global $user;
   $uid = $user->uid;
 
-  if (!$uid)
-    return; //If user is not logged in it should not be possible to save searches
+  if (!$uid) {
+    return;
+  } //If user is not logged in it should not be possible to save searches
 
   $entry = array(
     'timestamp' => $timestamp,
-    'uid' => (int) $uid,
-    'string' => (String) $string,
+    'uid' => (int)$uid,
+    'string' => (String)$string,
     'count' => $count,
   );
 
@@ -384,6 +392,7 @@ function bibdk_searchhistory_memoitem_change_callback($string, $save, $count, $t
 
 /**
  * Saves $entry to bibdk_searchhistory_memolist to database. Throws error and asks tyhe user to reload if for some reason an error should occur
+ *
  * @param type $entry
  */
 function bibdk_searchhistory_save_search($entry) {
@@ -394,9 +403,10 @@ function bibdk_searchhistory_save_search($entry) {
   else {
     try {
       db_insert('bibdk_searchhistory_memolist')
-          ->fields($entry)
-          ->execute();
-    } catch (Exception $e) {
+        ->fields($entry)
+        ->execute();
+    }
+    catch (Exception $e) {
       echo t('Could not add entry to database. Please reload the page and try again. Error logged.');
       watchdog('bibdk searchhistory', $e);
     }
@@ -405,6 +415,7 @@ function bibdk_searchhistory_save_search($entry) {
 
 /**
  * checks if the search exsist in $_SESSION['searches'] to validate that the arguments have not been manipulated
+ *
  * @param String $string
  * @param int $count
  * @return string|boolean
@@ -425,15 +436,17 @@ function bibdk_searchhistory_check_search_in_session($string, $count) {
 
 /**
  * Deletes $entry to bibdk_searchhistory_memolist to database. Throws error and asks tyhe user to reload if for some reason an error should occur
+ *
  * @param type $entry
  */
 function bibdk_searchhistory_delete_saved_search($entry) {
   try {
     db_delete('bibdk_searchhistory_memolist')
-        ->condition('uid', $entry['uid'])
-        ->condition('string', $entry['string'])
-        ->execute();
-  } catch (Exception $e) {
+      ->condition('uid', $entry['uid'])
+      ->condition('string', $entry['string'])
+      ->execute();
+  }
+  catch (Exception $e) {
     echo t('Could not delete entry from database. Please reload the page and try again. Error logged.');
     watchdog('bibdk searchhistory', $e);
   }
@@ -441,13 +454,14 @@ function bibdk_searchhistory_delete_saved_search($entry) {
 
 /**
  * Called from ting_search when a search is being executed. Saves the search string and number of results in the $_SESSION variable
+ *
  * @param String $keys - searchstring
  * @param int $searchsresult - result count
  */
 function bibdk_searchhistory_set_search_results($keys, $searchsresult) {
   _bibdk_searchhistory_check_session();
 
-  $limit = (int) variable_get('search_history_save_limit');
+  $limit = (int)variable_get('search_history_save_limit');
   if (count($_SESSION['searches']) >= $limit && !array_key_exists($keys, $_SESSION['searches']) && $limit > 0) {
     array_shift($_SESSION['searches']);
   }
@@ -473,6 +487,7 @@ function _bibdk_searchhistory_check_session() {
 
 /**
  * Helper function to check if any results is returnes
+ *
  * @param ting_object$searchsresult
  * @return int $count
  */
@@ -488,11 +503,12 @@ function _bibdk_searchhistory_check_searchresult($searchsresult) {
 /**
  * Implements hook_user_delete().
  * Deletes all search history entries in db connected to the deleted user.
+ *
  * @param type $account
  */
 function bibdk_searchhistory_user_delete($account) {
   $uid = $account->uid;
   db_delete('bibdk_searchhistory_memolist')
-      ->condition('uid', $uid)
-      ->execute();
+    ->condition('uid', $uid)
+    ->execute();
 }
