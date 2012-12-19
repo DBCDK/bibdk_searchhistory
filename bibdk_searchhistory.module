@@ -163,6 +163,10 @@ function bibdk_searchhistory_form($form) {
 
   $session_history = bibdk_searchhistory_get_session_searches($logged_in, $session_history);
 
+  $form['#attributes']['class'] = array(
+    'searchhistory',
+  );
+
   $form['bibdk_searchhistory_form']['bibdk_search_history_table'] = array(
     '#type' => 'tableselect',
     '#header' => $header,
