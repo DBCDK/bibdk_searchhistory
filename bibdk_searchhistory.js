@@ -68,7 +68,8 @@
 
             //single rows
             $('td div .combine-select').change(function () {
-                //countSelected()
+                window.setTimeout(countSelected, 100);
+                // countSelected()
             });
 
             function countSelected() {

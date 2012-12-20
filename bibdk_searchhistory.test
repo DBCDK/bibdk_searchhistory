@@ -19,7 +19,7 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
   }
 
   public function setUp() {
-    $this->profile = 'bibdk';
+    //$this->profile = 'bibdk';
     parent::setUp(array('ding_user', 'profile2', 'ding_provider', 'bibdk_test_provider', 'bibdk_searchhistory'));
   }
 
