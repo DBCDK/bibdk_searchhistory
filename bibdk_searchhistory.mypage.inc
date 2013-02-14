@@ -6,6 +6,8 @@
 function bibdk_searchhistory_bibdk_mypage_tabs($max_rows=3) {
   global $user;
 
+  _bibdk_searchhistory_check_session();
+
   $logged_in = $user->uid;
   $session_history = array();
   if ($logged_in) {
@@ -37,16 +39,18 @@ function bibdk_searchhistory_bibdk_mypage_tabs($max_rows=3) {
     foreach ($session_history as $searchstring => $search) {
       $form['bibdk_searchhistory']['rows'][] = array(
         'item_row'  => array(
-                            '#type'     => 'markup',
-                            '#markup'   => $search['search_string'],
-                           ),
+          '#type'     => 'markup',
+          '#markup'   => $search['search_string'],
+         ),
       );
     }
   }
   else {
-    $form['bibdk_searchhistory']['rows'] = array(
+    $form['bibdk_searchhistory']['rows'][] = array(
+      'item_row'  => array(
         '#type'     => 'markup',
         '#markup'   => t('No searches executed yet'),
+       ),
     );
   }
 
