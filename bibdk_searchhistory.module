@@ -1,4 +1,5 @@
 <?php
+require_once('bibdk_searchhistory.mypage.inc');
 
 /**
  * @file
@@ -158,7 +159,6 @@ function bibdk_searchhistory_form($form) {
   $session_history = array();
 
   if ($logged_in) {
-    $header['memolist'] = t('Memolist');
     $session_history = bibdk_searchhistory_get_saved_searches($logged_in);
   }
 

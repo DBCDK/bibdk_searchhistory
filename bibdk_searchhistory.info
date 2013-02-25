@@ -5,3 +5,4 @@ core = 7.x
 version = 7.x-0.5
 
 files[] = bibdk_searchhistory.test
+files[] = bibdk_searchhistory.mypage.inc
