@@ -4,5 +4,9 @@ package = Bibliotek.dk
 core = 7.x
 version = 7.x-0.6
 
-files[] = bibdk_searchhistory.test
-files[] = bibdk_searchhistory.mypage.inc
+files[] = test/bibdk_searchhistory.test
+files[] = includes/bibdk_searchhistory.mypage.inc
+files[] = includes/bibdkSearchHistory.inc
+files[] = bibdk_searchhistory.block.inc
+files[] = bibdk_searchhistory.form.inc
+files[] = bibdk_searchhistory.webservice.inc
