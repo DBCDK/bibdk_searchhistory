@@ -6,10 +6,6 @@
  */
 
 (function ($) {
-    Drupal.ajax.prototype.commands.searchhistory_remove = function(ajax, response, status){
-        var selector = response['selector'];
-        $(selector).closest('tr').remove();
-    },
     Drupal.behaviors.bibdk_searchhistory = {
         attach:function (context) {
             var basePath = Drupal.settings.basePath;

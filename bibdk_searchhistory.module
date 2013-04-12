@@ -31,7 +31,7 @@ function bibdk_searchhistory_menu() {
   $items = array();
   $items['bibdk_searchhistory/ajax/%/%'] = array(
     'page callback' => 'bibdk_searchhistory_action_link_callback',
-    'page arguments' => array(2),
+    'page arguments' => array(2,3),
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );
@@ -43,6 +43,15 @@ function bibdk_searchhistory_menu() {
     'access arguments' => array('administer bibdk search history settings'),
     'file' => 'includes/bibdk_searchhistory_settings.admin.inc',
   );
+
+  $items['user/searchhistory'] = array(
+    'title' => t('Search history'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bibdk_searchhistory_form'),
+    'access arguments' => array('access content'),
+    'type' => MENU_LOCAL_TASK,
+  );
+  return $items;
 }
 
 /**
@@ -87,6 +96,13 @@ function _bibdk_searchhistory_element_view($element){
  * @return array
  */
 function bibdk_searchhistory_action_link($element){
+  global $user;
+  if (!ding_user_is_provider_user($user)){
+    return array(
+      '#type' => 'markup',
+      '#markup' => t('login to save'),
+    );
+  }
   static $c;
   $c++;
   $saved = isset($element['id']) ? true : false;
@@ -103,6 +119,9 @@ function bibdk_searchhistory_action_link($element){
     '#ajax' => array(
       'path' => 'bibdk_searchhistory/ajax/'.$c.'/'.$serial_element,
     'callback' => 'bibdk_searchhistory_action_link_callback',
+    ),
+    '#attached' => array(
+      'js' => array(drupal_get_path('module', 'bibdk_searchhistory') . '/js/bibdk_searchhistory.ajax.js'),
     ),
   );
   return $render;
@@ -153,26 +172,17 @@ function bibdk_searchhistory_get_views($elements){
   return $views;
 }
 
-
 /**
  * Called from ting_search when a search is being executed. Saves the search string and number of results in the $_SESSION variable
  *
  * @param String $keys - searchstring
  * @param int $searchsresult - result count
  */
-function bibdk_searchhistory_set_search_results($keys, $searchsresult) {
+function bibdk_searchhistory_ting_openformat_search_results($keys, $searchsresult) {
   $element = array(
     'string' => $keys,
     'count' => isset($searchsresult->numTotalObjects) ? $searchsresult->numTotalObjects : 0,
     'timestamp' => time(),
   );
   BibdkSearchHistory::addElementToSession($element);
-}
-
-
-//TODO: Depricated -> BibdkSearchHistoryClass
-function _bibdk_searchhistory_remove_from_session($string) {
-  if (array_key_exists($string, $_SESSION['searches'])) {
-    unset($_SESSION['searches'][$string]);
-  }
 }

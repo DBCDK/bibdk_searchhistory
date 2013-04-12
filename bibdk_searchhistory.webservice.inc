@@ -7,6 +7,7 @@
  */
 function _bibdk_searchhistory_add_element_webservice ($element, $user = null){
   if ($response = _bibdk_searchhistory_call_webservice('add_searchhistory', $element, $user)) {
+    // TODO: HANDLE ERRORS
     $xpath = bibdk_searchhistory_webservice_responce_xpath($response['response']);
     $ids = bibdk_searchhistory_parse_id($xpath);
     return reset($ids);
