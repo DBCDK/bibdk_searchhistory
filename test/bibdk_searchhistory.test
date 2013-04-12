@@ -32,20 +32,57 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
 
   public function testRunner(){
    //$this->_testCheckProfileTypeDelete();
-  $this->_testAddSearchHistoryToWebservice();
+    //$this->_testAddSearchHistoryToWebservice();
+    $this->_testBibdkSearchHistoryClass();
 
   }
 
+  private function _testBibdkSearchHistoryClass(){
+    global $user;
+    $user = $this->_createProviderUser();
+
+    BibdkSearchHistory::clearAllSearchHistory();
+    $result = BibdkSearchHistory::getAllElements();
+    // Test base is empty
+    $this->assertTrue($result == array(), 'No elements in searchhistory');
+
+
+    // Test if element is added to session
+    $element = array(
+      'string' => 'test string',
+      'timestamp' => 'testTime',
+      'count' => 1234
+    );
+    BibdkSearchHistory::addElementToSession($element);
+    $result = BibdkSearchHistory::getAllElements();
+
+    $expected_result[$element['string']] = $element;
+    $this->assertTrue($result == $expected_result, t('search: @string added to session', array('@string' => $element['string'])));
+
+    //Test if element is added to webservice
+    $element = BibdkSearchHistory::addElementToWebservice($element);
+    $result = BibdkSearchHistory::getAllElements();
+    $this->assertTrue($result[$element['string']]['id'] == $element['id'], t('search: @string added to webservice and given id @id', array(
+      '@string' => $element['string'],
+      '@id' => $element['id'],
+    )));
+
+    //Test if element is removed from webservice & Session
+    BibdkSearchHistory::removeElementFromWebservice($element);
+    $result = BibdkSearchHistory::getAllElements();
+    $expected_result = array();
+    $this->assertTrue($result == $expected_result, t('search: @string removed from webservice and session', array(
+      '@string' => $element['string'],
+    )));
+
+
+    // Delete provider user
+    $this->_removeProviderUser();
+
+  }
 
   private function _testAddSearchHistoryToWebservice(){
-    $this->_createProviderUser();
-    $user = new stdClass();
-    $user->uid = 2;
-    $user->name = 'pjohans@gmail.com';
-    ding_user_save_creds(array('creds' => array(
-      'name' => 'pjohans@gmail.com',
-      'pass' => '1111',
-    )), $user);
+    $user = $this->_createProviderUser();
 
     $element = array(
       'searchHistoryString' => 'test string',
@@ -83,15 +120,39 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
 
     $this->assertFalse(isset($list[$result]), t('element with id: @result is NOT on the list of search history results', array('@result' => $result)));
 
+
+    $this->_removeProviderUser();
   }
 
+
+
   private function _createProviderUser() {
+    $name = 'dummy@dbc.dk';
+    $pass = 'pass';
+    bibdk_provider_user_create_account($name, $pass);
     db_insert('authmap')
       ->fields(array(
         'uid' => 2,
         'module' => 'ding_user',
-        'authname' => 'pjohans@gmail.com',
+        'authname' => $name
       ))->execute();
+
+    $user = new stdClass();
+    $user->uid = 2;
+    $user->name = $name;
+    ding_user_save_creds(array('creds' => array(
+      'name' => $name,
+      'pass' => $pass,
+    )), $user);
+    return $user;
+  }
+
+  private function _removeProviderUser() {
+    $name = 'dummy@dbc.dk';
+    db_delete('authmap')
+      ->condition('authname', $name)
+      ->execute();
+    bibdk_provider_user_delete_account($name);
   }
    // check if profiletype is deleted when module is disabled and created after module has been enabled
   // and user logs in.
