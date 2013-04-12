@@ -14,16 +14,16 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Bibdk Search History functionality',
       'description' => t('Test the functionality of Bibdk Search History'),
-      'group' => 'AAA',
+      'group' => 'bibliotek.dk',
     );
   }
 
   public function setUp() {
     //$this->profile = 'bibdk';
-//    parent::setUp(array('ding_user', 'profile2', 'ding_provider', 'bibdk_test_provider', 'bibdk_searchhistory'));
+//    parent::setUp(array('ding_user', '', 'ding_provider', 'bibdk_test_provider', 'bibdk_searchhistory'));
 
     $this->profile = 'minimal';
-    parent::setUp('ting_openformat', 'bibdk_searchhistory', 'ding_provider', 'bibdk_provider'); //, 'bibdk_webservice');
+    parent::setUp('ting_openformat', 'bibdk_searchhistory', 'ding_provider', 'bibdk_provider', 'profile2'); //, 'bibdk_webservice');
     variable_set('ting_search_url', 'http://lakiseks.dbc.dk/openbibdk/0.5/');
     variable_set('bibdk_provider_webservice_url', 'http://guesstimate.dbc.dk/~svi/openuserinfo/server.php');
     variable_set('bibdk_provider_security_code', 'testhest');
@@ -31,8 +31,8 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
   }
 
   public function testRunner(){
-   //$this->_testCheckProfileTypeDelete();
-    //$this->_testAddSearchHistoryToWebservice();
+    $this->_testCheckProfileTypeDelete();
+    $this->_testAddSearchHistoryToWebservice();
     $this->_testBibdkSearchHistoryClass();
 
   }
@@ -101,11 +101,11 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
     //Test searchHistory list is returned
     $list =_bibdk_searchhistory_get_elements_webservice($user);
 
-    $this->assertTrue($list[$result] == array(
-      'id' => $result,
+    $this->assertTrue($list['test string'] == array(
       'string' => 'test string',
       'time' => 'testTime',
-      'count' => 1234
+      'count' => 1234,
+      'id' => $result,
     ), t('element with id: @result is on the list of search history results', array('@result' => $result)));
 
     // Test element is removed
@@ -157,6 +157,7 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
    // check if profiletype is deleted when module is disabled and created after module has been enabled
   // and user logs in.
   private function _testCheckProfileTypeDelete(){
+    $this->_createProviderUser();
     //first disable module
     module_disable(array('bibdk_searchhistory'));
     $profile_type = 'bibdk_search_history';
@@ -167,13 +168,15 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
     // enable module
     module_enable(array('bibdk_searchhistory'));
     // we have to submit the user_login_block form to log in as provider user
-    $edit['name'] = 'hest@gmail.com';
-    $edit['pass'] = 'hest';
+    $edit['name'] = 'dummy@dbc.dk';
+    $edit['pass'] = 'pass';
     $this->drupalPost('user', $edit, 'Log in', array(), array(), 'user-login', NULL );
 
     // assert that the profiletype has been created
     $type = profile2_get_types($profile_type);
     $this->assertEqual($type->type,$profile_type);
+
+    $this->_removeProviderUser();
   }
 
 
