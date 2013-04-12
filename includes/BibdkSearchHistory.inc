@@ -2,6 +2,7 @@
 
 
 class BibdkSearchHistory {
+  private static $elements = null;
 
   /**
    * Add pid to bibdk_cart
@@ -35,9 +36,8 @@ class BibdkSearchHistory {
    * Get all searchhistory elements
    */
   public static function getAllElements() {
-    $elements = _bibdk_searchhistory_get_elements_webservice();
-    $elements += self::getSession();
-
+      $elements = _bibdk_searchhistory_get_elements_webservice();
+      $elements += self::getSession();
     return $elements;
   }
 
@@ -87,4 +87,15 @@ class BibdkSearchHistory {
       array_shift($_SESSION['searches']);
     }
   }
+
+  public static function clearAllSearchHistory(){
+    $elements = self::getAllElements();
+    foreach($elements as $element){
+      if (isset($element['id'])){
+        self::removeElementFromWebservice($element);
+      }
+    }
+    unset($_SESSION['searches']);
+  }
+
 }
