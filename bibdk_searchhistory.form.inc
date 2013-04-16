@@ -35,13 +35,15 @@ function bibdk_searchhistory_form($form, $form_state) {
       ),
     ),
   );
+  $op_and = (variable_get('cglLang', 'cqleng') == 'cqleng') ? ' AND ' : ' OG ';
+  $op_or = (variable_get('cglLang', 'cqleng') == 'cqleng') ? ' OR ' : ' ELLER ';
 
-  $radios = array(' og ' => t('Combine "And"'), ' eller ' => t('Combine "Or"'));
+  $radios = array($op_and => t('Combine "And"'), $op_or => t('Combine "Or"'));
 
   $form['bibdk_searchhistory_form']['and_or_radios'] = array(
     '#type' => 'radios',
     '#options' => $radios,
-    '#default_value' => ' og ',
+    '#default_value' => $op_and,
   );
 
   $form['bibdk_searchhistory_form']['delete'] = array(
