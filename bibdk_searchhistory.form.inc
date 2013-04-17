@@ -21,26 +21,13 @@ function bibdk_searchhistory_form($form, $form_state) {
     'memolist' => t('Save'),
   );
 
-  $form['actions'] = array(
-    '#type' => 'item',
-  );
   $form['actions'] = bibdk_searchhistory_get_primary_actions(array());
-
-  $form['bibdk_searchhistory_form'] = array(
-    '#type' => 'item',
-    '#attributes' => array(
-      'class' => array(
-
-        'search-history-table',
-      ),
-    ),
-  );
 
   $form['bibdk_searchhistory_form']['bibdk_search_history_table'] = array(
     '#type' => 'tableselect',
     '#header' => $header,
     '#options' => $search_views,
-    '#empty' => array('#markup' => ''.t('No searches executed yet')),
+    '#empty' => array('#markup' => '' . t('No searches executed yet')),
     '#js_select' => FALSE,
     '#sticky' => FALSE,
     '#multiple' => TRUE,
@@ -62,12 +49,6 @@ function bibdk_searchhistory_form($form, $form_state) {
     '#type' => 'radios',
     '#options' => $radios,
     '#default_value' => $op_and,
-    '#attributes' => array(
-      'class' => array(
-        //'search-action-list'
-      ),
-
-    ),
   );
 
   $form['bibdk_searchhistory_form']['combine'] = array(
@@ -83,25 +64,23 @@ function bibdk_searchhistory_form($form, $form_state) {
   );
 
   //Adding JavaScript
-  if (count($elements) > 0) {
-    $form['#attached']['js'] = array(
-      drupal_get_path('module', 'bibdk_searchhistory') . '/js/bibdk_searchhistory.js',
-    );
-  }
+  $form['#attached']['js'] = array(
+    drupal_get_path('module', 'bibdk_searchhistory') . '/js/bibdk_searchhistory.js',
+  );
 
   return $form;
 }
 
-function bibdk_searchhistory_get_primary_actions(){
+function bibdk_searchhistory_get_primary_actions() {
 
   $elements = array(
-      '#type' => 'container',
-      '#attributes' => array(
-        'class' => array(
-          'search-action-list',
-        ),
+    '#type' => 'container',
+    '#attributes' => array(
+      'class' => array(
+        'search-action-list',
       ),
-    );
+    ),
+  );
 
   $elements['select_all'] = array(
     '#type' => 'link',
@@ -118,21 +97,21 @@ function bibdk_searchhistory_get_primary_actions(){
   );
 
   $elements['delete'] = array(
-      '#type' => 'submit',
-      '#value' => t('Delete selected'),
-      '#submit' => array('bibdk_searchhistory_form_delete'),
-      '#attributes' => array(
-        'disabled' => TRUE,
-        'class' => array(
-          'button-as-link',
-        ),
+    '#type' => 'submit',
+    '#value' => t('Delete selected'),
+    '#submit' => array('bibdk_searchhistory_form_delete'),
+    '#attributes' => array(
+      'disabled' => TRUE,
+      'class' => array(
+        'button-as-link',
       ),
-      '#ajax' => array(
-        'callback' => 'bibdk_searchhistory_form_delete',
-      ),
+    ),
+    '#ajax' => array(
+      'callback' => 'bibdk_searchhistory_form_delete',
+    ),
     '#attached' => array(
-    'js' => array(drupal_get_path('module', 'bibdk_searchhistory') . '/js/bibdk_searchhistory.ajax.js'),
-  ),
+      'js' => array(drupal_get_path('module', 'bibdk_searchhistory') . '/js/bibdk_searchhistory.ajax.js'),
+    ),
   );
 
   return $elements;
@@ -151,7 +130,7 @@ function bibdk_searchhistory_form_delete($form, &$form_state) {
   foreach ($searches as $search => $string) {
     if ($search) {
       $element = BibdkSearchHistory::getElement($string);
-      $commands[] = bibdk_searchhistory_ajax_command('input[value='.$string.']');
+      $commands[] = bibdk_searchhistory_ajax_command('input[value=' . $string . ']');
       // Remove from session
       if (isset($element)) {
         BibdkSearchHistory::removeElementFromSession($element);
@@ -189,6 +168,7 @@ function bibdk_searchhistory_form_combine($form, $form_state) {
 
 
 /** Generates a view for each element in the search history
+ *
  * @param $element
  * @return array
  */
@@ -204,6 +184,7 @@ function _bibdk_searchhistory_element_view($element) {
 }
 
 /** Create an add remove button for logged in users
+ *
  * @param $element
  * @return array
  */
@@ -241,6 +222,7 @@ function bibdk_searchhistory_action_link($element) {
 
 
 /** Ajax callback : add/remove search history element from webservice
+ *
  * @param $count
  * @param $serial_element
  */
@@ -261,6 +243,7 @@ function bibdk_searchhistory_action_link_callback($count, $serial_element) {
 }
 
 /** Ajax command to remove element from dom
+ *
  * @param $selector
  * @return array
  */
