@@ -7,11 +7,11 @@
  */
 function _bibdk_searchhistory_add_element_webservice($element, $user = null) {
   if ($response = _bibdk_searchhistory_call_webservice('add_searchhistory', $element, $user)) {
-    // TODO: HANDLE ERRORS
     $xpath = bibdk_searchhistory_webservice_responce_xpath($response['response']);
     $ids = bibdk_searchhistory_parse_id($xpath);
     return reset($ids);
-  } //XXX
+  }
+  return null;
 }
 
 /** Remove search history element to provider webservice
@@ -25,7 +25,7 @@ function _bibdk_searchhistory_remove_element_webservice($element, $user = null) 
     $ids = bibdk_searchhistory_parse_id($xpath);
     return reset($ids);
   }
-  //XXX
+  return null;
 }
 
 /** Get search history from provider webservice
@@ -93,12 +93,12 @@ function bibdk_searchhistory_parse_id($xpath) {
   if (!isset($xpath)) {
     return array();
   }
+  $return = array();
   $query = '//oui:searchHistoryId';
   $nodelist = $xpath->query($query);
   foreach ($nodelist as $delta => $node) {
     $return[] = $node->nodeValue;
   }
-  //XXX
   return $return;
 }
 
