@@ -21,18 +21,35 @@ function bibdk_searchhistory_form($form, $form_state) {
     'memolist' => t('Save'),
   );
 
+  $form['actions'] = array(
+    '#type' => 'item',
+  );
+  $form['actions'] = bibdk_searchhistory_get_primary_actions(array());
+
+  $form['bibdk_searchhistory_form'] = array(
+    '#type' => 'item',
+    '#attributes' => array(
+      'class' => array(
+
+        'search-history-table',
+      ),
+    ),
+  );
+
   $form['bibdk_searchhistory_form']['bibdk_search_history_table'] = array(
     '#type' => 'tableselect',
     '#header' => $header,
     '#options' => $search_views,
-    '#empty' => t('No searches executed yet'),
-    '#js_select' => TRUE,
-    '#tree' => TRUE,
+    '#empty' => array('#markup' => ''.t('No searches executed yet')),
+    '#js_select' => FALSE,
+    '#sticky' => FALSE,
     '#multiple' => TRUE,
-    '#default_value' => array(),
     '#attributes' => array(
       'class' => array(
-        'combine-select'
+        'table',
+        'combine-select',
+        'element-wrapper',
+        'search-history-table',
       ),
     ),
   );
@@ -45,22 +62,22 @@ function bibdk_searchhistory_form($form, $form_state) {
     '#type' => 'radios',
     '#options' => $radios,
     '#default_value' => $op_and,
-  );
-
-  $form['bibdk_searchhistory_form']['delete'] = array(
-    '#type' => 'submit',
-    '#value' => t('Delete selected'),
-    '#submit' => array('bibdk_searchhistory_form_delete'),
     '#attributes' => array(
-      'disabled' => TRUE
+      'class' => array(
+        //'search-action-list'
+      ),
+
     ),
   );
+
   $form['bibdk_searchhistory_form']['combine'] = array(
     '#type' => 'submit',
     '#value' => t('Combiner'),
     '#submit' => array('bibdk_searchhistory_form_combine'),
-
     '#attributes' => array(
+      'class' => array(
+        'search-action-list'
+      ),
       'disabled' => TRUE
     ),
   );
@@ -75,6 +92,52 @@ function bibdk_searchhistory_form($form, $form_state) {
   return $form;
 }
 
+function bibdk_searchhistory_get_primary_actions(){
+
+  $elements = array(
+      '#type' => 'container',
+      '#attributes' => array(
+        'class' => array(
+          'search-action-list',
+        ),
+      ),
+    );
+
+  $elements['select_all'] = array(
+    '#type' => 'link',
+    '#title' => t('mark_all_none', array(), array('context' => 'bibdk_cart')),
+    '#title_display' => 'invisible',
+    '#href' => '',
+    '#options' => array('attributes' => array(
+      'class' => array(
+        'select-all'
+      ),
+      'title' => t('Go to cart')),
+    ),
+
+  );
+
+  $elements['delete'] = array(
+      '#type' => 'submit',
+      '#value' => t('Delete selected'),
+      '#submit' => array('bibdk_searchhistory_form_delete'),
+      '#attributes' => array(
+        'disabled' => TRUE,
+        'class' => array(
+          'button-as-link',
+        ),
+      ),
+      '#ajax' => array(
+        'callback' => 'bibdk_searchhistory_form_delete',
+      ),
+    '#attached' => array(
+    'js' => array(drupal_get_path('module', 'bibdk_searchhistory') . '/js/bibdk_searchhistory.ajax.js'),
+  ),
+  );
+
+  return $elements;
+}
+
 /**
  * form callback function. Removes selected entries from $_SESSION['searches] array and deletes posts in db if necessary
  *
@@ -84,9 +147,11 @@ function bibdk_searchhistory_form($form, $form_state) {
  */
 function bibdk_searchhistory_form_delete($form, &$form_state) {
   $searches = $form_state['values']['bibdk_search_history_table'];
+  $commands = array();
   foreach ($searches as $search => $string) {
     if ($search) {
       $element = BibdkSearchHistory::getElement($string);
+      $commands[] = bibdk_searchhistory_ajax_command('input[value='.$string.']');
       // Remove from session
       if (isset($element)) {
         BibdkSearchHistory::removeElementFromSession($element);
@@ -98,6 +163,7 @@ function bibdk_searchhistory_form_delete($form, &$form_state) {
       }
     }
   }
+  return array('#type' => 'ajax', '#commands' => $commands);
 }
 
 /**
