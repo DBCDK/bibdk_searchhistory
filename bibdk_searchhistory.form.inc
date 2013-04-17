@@ -3,12 +3,13 @@
 /**
  * Create the tableselect form with searchresults and possibly saved searches
  *
- * @param type $form
+ * @param array $form
+ * @param $form_state
  * @return array $form
  */
 function bibdk_searchhistory_form($form, $form_state) {
 
-   $elements = BibdkSearchHistory::getAllElements();
+  $elements = BibdkSearchHistory::getAllElements();
   $search_views = bibdk_searchhistory_get_views($elements);
   $form['#attributes']['class'] = array(
     'searchhistory',
@@ -64,8 +65,8 @@ function bibdk_searchhistory_form($form, $form_state) {
     ),
   );
 
-//Adding JavaScript
-  if (count($elements) > 0){
+  //Adding JavaScript
+  if (count($elements) > 0) {
     $form['#attached']['js'] = array(
       drupal_get_path('module', 'bibdk_searchhistory') . '/js/bibdk_searchhistory.js',
     );
@@ -87,16 +88,22 @@ function bibdk_searchhistory_form_delete($form, &$form_state) {
     if ($search) {
       $element = BibdkSearchHistory::getElement($string);
       // Remove from session
-      if (isset($element))
+      if (isset($element)) {
         BibdkSearchHistory::removeElementFromSession($element);
+      }
 
       // remove from webservice
-      if (isset($element['id']))
+      if (isset($element['id'])) {
         BibdkSearchHistory::removeElementFromWebservice($element);
+      }
     }
   }
 }
 
+/**
+ * @param array $form
+ * @param array $form_state
+ */
 function bibdk_searchhistory_form_combine($form, $form_state) {
   $searches = $form_state['values']['bibdk_search_history_table'];
   $combined = array();
@@ -119,7 +126,7 @@ function bibdk_searchhistory_form_combine($form, $form_state) {
  * @param $element
  * @return array
  */
-function _bibdk_searchhistory_element_view($element){
+function _bibdk_searchhistory_element_view($element) {
   $string = $element['string'];
   $count = $element['count'];
   $memolist = bibdk_searchhistory_action_link($element);
@@ -134,9 +141,9 @@ function _bibdk_searchhistory_element_view($element){
  * @param $element
  * @return array
  */
-function bibdk_searchhistory_action_link($element){
+function bibdk_searchhistory_action_link($element) {
   global $user;
-  if (!ding_user_is_provider_user($user)){
+  if (!ding_user_is_provider_user($user)) {
     return array(
       '#type' => 'markup',
       '#markup' => t('login to save'),
@@ -149,14 +156,14 @@ function bibdk_searchhistory_action_link($element){
   $render = array(
     '#type' => 'link',
     '#href' => '',
-    '#title' => $saved  ? t('Remove') : t('Add'),
+    '#title' => $saved ? t('Remove') : t('Add'),
     '#options' => array(
       'attributes' => array(
         'element-id' => $c,
       ),
     ),
     '#ajax' => array(
-      'path' => 'bibdk_searchhistory/ajax/'.$c.'/'.$serial_element,
+      'path' => 'bibdk_searchhistory/ajax/' . $c . '/' . $serial_element,
       'callback' => 'bibdk_searchhistory_action_link_callback',
     ),
     '#attached' => array(
@@ -171,16 +178,16 @@ function bibdk_searchhistory_action_link($element){
  * @param $count
  * @param $serial_element
  */
-function bibdk_searchhistory_action_link_callback($count, $serial_element){
+function bibdk_searchhistory_action_link_callback($count, $serial_element) {
   $element = unserialize(urldecode($serial_element));
-  if(!isset($element['id'])){
+  if (!isset($element['id'])) {
     $element = BibdkSearchHistory::addElementToWebservice($element);
     $link = bibdk_searchhistory_action_link($element);
-    $commands[] = ajax_command_replace('[element-id='. $count . ']', drupal_render($link));
+    $commands[] = ajax_command_replace('[element-id=' . $count . ']', drupal_render($link));
   }
-  else{
-    $result = BibdkSearchHistory::removeElementFromWebservice($element);
-    $commands[] = bibdk_searchhistory_ajax_command('[element-id='. $count . ']');
+  else {
+    $result = BibdkSearchHistory::removeElementFromWebservice($element); //xxx
+    $commands[] = bibdk_searchhistory_ajax_command('[element-id=' . $count . ']');
   }
 
   $callback = array('#type' => 'ajax', '#commands' => $commands);
@@ -203,9 +210,9 @@ function bibdk_searchhistory_ajax_command($selector) {
  * @param $elements
  * @return array
  */
-function bibdk_searchhistory_get_views($elements){
+function bibdk_searchhistory_get_views($elements) {
   $views = array();
-  foreach($elements as $element){
+  foreach ($elements as $element) {
     $views[$element['string']] = _bibdk_searchhistory_element_view($element);
   }
   return $views;

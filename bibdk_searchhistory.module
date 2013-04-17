@@ -31,7 +31,7 @@ function bibdk_searchhistory_menu() {
   $items = array();
   $items['bibdk_searchhistory/ajax/%/%'] = array(
     'page callback' => 'bibdk_searchhistory_action_link_callback',
-    'page arguments' => array(2,3),
+    'page arguments' => array(2, 3),
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );

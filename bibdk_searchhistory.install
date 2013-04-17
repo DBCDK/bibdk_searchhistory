@@ -10,12 +10,12 @@
  *
  */
 
-function bibdk_searchhistory_schema(){
+function bibdk_searchhistory_schema() {
 
   $schema['bibdk_searchhistory_memolist'] = array(
     'description' => 'Stores searches added to memolist by users',
     'fields' => array(
-      'sid'  => array(
+      'sid' => array(
         'type' => 'serial',
         'not null' => TRUE,
         'description' => 'Primary Key: unique search ID',
@@ -46,7 +46,7 @@ function bibdk_searchhistory_schema(){
     ),
     'primary key' => array('sid'),
     'indexes' => array(
-      'sid'    => array('sid'),
+      'sid' => array('sid'),
       'timestamp' => array('timestamp'),
       'uid' => array('uid'),
     ),
@@ -61,12 +61,12 @@ function bibdk_searchhistory_schema(){
  * delete the profile type defined in this module
  **/
 function bibdk_searchhistory_disable() {
-  if( function_exists( 'bibdk_searchhistory_user_profile2_tabs' ) ) {
+  if (function_exists('bibdk_searchhistory_user_profile2_tabs')) {
     $function = 'bibdk_searchhistory_user_profile2_tabs';
     $profile = call_user_func($function);
 
     $profile_type = profile2_get_types($profile->type);
-    if( !empty($profile_type) ) {
+    if (!empty($profile_type)) {
       profile2_type_delete($profile_type);
     }
   }

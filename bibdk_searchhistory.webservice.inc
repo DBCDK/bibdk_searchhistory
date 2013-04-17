@@ -5,13 +5,13 @@
  * @param null $user
  * @return mixed
  */
-function _bibdk_searchhistory_add_element_webservice ($element, $user = null){
+function _bibdk_searchhistory_add_element_webservice($element, $user = null) {
   if ($response = _bibdk_searchhistory_call_webservice('add_searchhistory', $element, $user)) {
     // TODO: HANDLE ERRORS
     $xpath = bibdk_searchhistory_webservice_responce_xpath($response['response']);
     $ids = bibdk_searchhistory_parse_id($xpath);
     return reset($ids);
-  }
+  } //XXX
 }
 
 /** Remove search history element to provider webservice
@@ -19,19 +19,20 @@ function _bibdk_searchhistory_add_element_webservice ($element, $user = null){
  * @param null $user
  * @return mixed
  */
-function _bibdk_searchhistory_remove_element_webservice ($element, $user = null){
+function _bibdk_searchhistory_remove_element_webservice($element, $user = null) {
   if ($response = _bibdk_searchhistory_call_webservice('remove_searchhistory', $element, $user)) {
     $xpath = bibdk_searchhistory_webservice_responce_xpath($response['response']);
     $ids = bibdk_searchhistory_parse_id($xpath);
     return reset($ids);
   }
+  //XXX
 }
 
 /** Get search history from provider webservice
  * @param null $user
  * @return array
  */
-function _bibdk_searchhistory_get_elements_webservice ($user = null){
+function _bibdk_searchhistory_get_elements_webservice($user = null) {
   if ($response = _bibdk_searchhistory_call_webservice('get_searchhistory', null, $user)) {
     $xpath = bibdk_searchhistory_webservice_responce_xpath($response['response']);
     return bibdk_searchhistory_parse_content($xpath);
@@ -94,10 +95,10 @@ function bibdk_searchhistory_parse_id($xpath) {
   }
   $query = '//oui:searchHistoryId';
   $nodelist = $xpath->query($query);
-  foreach($nodelist as $delta => $node){
+  foreach ($nodelist as $delta => $node) {
     $return[] = $node->nodeValue;
   }
-
+  //XXX
   return $return;
 }
 
@@ -111,11 +112,11 @@ function bibdk_searchhistory_parse_content($xpath) {
   if (!isset($xpath)) {
     return array();
   }
-// grap elements
+  // grap elements
   $query = '//oui:searchHistory';
   $nodelist = $xpath->query($query);
 
-// check if empty
+  // check if empty
   if (empty($nodelist)) {
     return array();
   }
@@ -140,8 +141,9 @@ function bibdk_searchhistory_parse_content($xpath) {
             break;
         }
       }
-      if (isset($element['string']))
+      if (isset($element['string'])) {
         $searchhistory[$element['string']] = $element;
+      }
     }
   }
   return $searchhistory;
