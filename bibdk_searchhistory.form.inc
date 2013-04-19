@@ -155,7 +155,7 @@ function bibdk_searchhistory_form_combine($form, $form_state) {
   $combinator = $form_state['values']['and_or_radios'];
   foreach ($searches as $search => $string) {
     if ($string) {
-      $combined[] = $string;
+      $combined[] = _bibdk_searchhistory_format_combine_string($string);
     }
   }
 
@@ -164,6 +164,18 @@ function bibdk_searchhistory_form_combine($form, $form_state) {
   drupal_goto('search/work/' . $new_string);
 }
 
+
+/** Helper function to add parentheses to strings with spaces
+ * @param $string
+ * @return string
+ */
+function _bibdk_searchhistory_format_combine_string($string){
+  if (strpos($string, ' ') !== false){
+    $string = substr($string, 0, 1)  != '(' ? '('.$string : $string;
+    $string = substr($string, -1)  != ')' ? $string.')' : $string;
+  }
+  return $string;
+}
 
 /** Generates a view for each element in the search history
  *
