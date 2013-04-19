@@ -158,11 +158,9 @@ function bibdk_searchhistory_form_combine($form, $form_state) {
       $combined[] = $string;
     }
   }
-  $new_string = $combined[0];
-  for ($i = 1; $i < count($combined); $i++) {
-    $new_string .= $combinator;
-    $new_string .= $combined[$i];
-  }
+
+  $new_string = '('. implode($combinator, $combined) . ')';
+
   drupal_goto('search/work/' . $new_string);
 }
 
