@@ -40,8 +40,8 @@ function bibdk_searchhistory_form($form, $form_state) {
       ),
     ),
   );
-  $op_and = (variable_get('cglLang', 'cqleng') == 'cqleng') ? ' AND ' : ' OG ';
-  $op_or = (variable_get('cglLang', 'cqleng') == 'cqleng') ? ' OR ' : ' ELLER ';
+  $op_and = _bibdk_searchhistory_get_cql('AND');
+  $op_or = _bibdk_searchhistory_get_cql('OR');;
 
   $radios = array($op_and => t('Combine "And"'), $op_or => t('Combine "Or"'));
 
@@ -69,6 +69,15 @@ function bibdk_searchhistory_form($form, $form_state) {
   );
 
   return $form;
+}
+
+/** Wrapper for ting_openformat_get_cql_commando
+ * see ting_openformat.module
+ * @param $cql
+ * @return string
+ */
+function _bibdk_searchhistory_get_cql($cql){
+  return function_exists('ting_openformat_get_cql_commando') ? ting_openformat_get_cql_commando($cql) : ' ' . $cql . ' ';
 }
 
 function bibdk_searchhistory_get_primary_actions() {
