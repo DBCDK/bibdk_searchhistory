@@ -19,14 +19,15 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
   }
 
   public function setUp() {
-    //$this->profile = 'bibdk';
-//    parent::setUp(array('ding_user', '', 'ding_provider', 'bibdk_test_provider', 'bibdk_searchhistory'));
-
-    $this->profile = 'minimal';
-    parent::setUp('ting_openformat', 'bibdk_searchhistory', 'ding_provider', 'bibdk_provider', 'profile2'); //, 'bibdk_webservice');
+    parent::setUp('search', 'ting_openformat', 'bibdk_searchhistory', 'ding_provider', 'bibdk_provider', 'profile2', 'devel'); //, 'bibdk_webservice');
     variable_set('ting_search_url', 'http://lakiseks.dbc.dk/openbibdk/0.5/');
     variable_set('bibdk_provider_webservice_url', 'http://guesstimate.dbc.dk/~svi/openuserinfo/server.php');
     variable_set('bibdk_provider_security_code', 'testhest');
+    variable_set('search_active_modules', array('ting_openformat' => 'ting_openformat'));
+    variable_set('search_default_module', 'ting_openformat');
+    user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('access content', 'search content'));
+
+    menu_rebuild();
 
   }
 
@@ -34,8 +35,8 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
     $this->_testCheckProfileTypeDelete();
     $this->_testAddSearchHistoryToWebservice();
     $this->_testBibdkSearchHistoryClass();
-
   }
+
 
   private function _testBibdkSearchHistoryClass(){
     global $user;
@@ -140,6 +141,7 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
     $user = new stdClass();
     $user->uid = 2;
     $user->name = $name;
+    $user->roles = array();
     ding_user_save_creds(array('creds' => array(
       'name' => $name,
       'pass' => $pass,
