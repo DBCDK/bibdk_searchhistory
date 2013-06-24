@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Admin settings for search history.
+ */
+
 function bibdk_searchhistory_admin() {
   $form['search_history_save_limit'] = array(
     '#type' => 'textfield',

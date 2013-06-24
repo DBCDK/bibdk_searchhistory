@@ -1,8 +1,12 @@
 <?php
 
+/**
+ * @file
+ * Define class BibdkSearchHistory.
+ */
 
 class BibdkSearchHistory {
-  private static $elements = null;
+  private static $elements = NULL;
 
   /**
    * Add pid to bibdk_cart
@@ -45,16 +49,16 @@ class BibdkSearchHistory {
    * @param $string
    * @return null
    */
-  public static function getElement($string){
+  public static function getElement($string) {
     $elements = self::getAllElements();
-    return (isset($elements[$string])) ? $elements[$string] : null;
+    return (isset($elements[$string])) ? $elements[$string] : NULL;
   }
 
 
   /** Get session object
    * @return array
    */
-  public static function getSession(){
+  public static function getSession() {
     if (!isset($_SESSION['searches']))
       $_SESSION['searches'] = array();
     return $_SESSION['searches'];
@@ -63,7 +67,7 @@ class BibdkSearchHistory {
   /** Add single element to Session
    * @param $element
    */
-  public static function addElementToSession($element){
+  public static function addElementToSession($element) {
     $key = $element['string'];
     $_SESSION['searches'][$key] = $element;
     self::_checkSessionLimit();
@@ -72,7 +76,7 @@ class BibdkSearchHistory {
   /** Remove single element to Session
    * @param $element
    */
-  public static function removeElementFromSession($element){
+  public static function removeElementFromSession($element) {
     $string = $element['string'];
     if (isset($_SESSION['searches'][$string]))
       unset($_SESSION['searches'][$string]);
@@ -81,17 +85,17 @@ class BibdkSearchHistory {
   /**
    * If where are more searches in session than limit allows remove oldest element
    */
-  private static function _checkSessionLimit(){
+  private static function _checkSessionLimit() {
     $limit = (int)variable_get('search_history_save_limit');
     if (count($_SESSION['searches']) > $limit && $limit > 0) {
       array_shift($_SESSION['searches']);
     }
   }
 
-  public static function clearAllSearchHistory(){
+  public static function clearAllSearchHistory() {
     $elements = self::getAllElements();
-    foreach($elements as $element){
-      if (isset($element['id'])){
+    foreach ($elements as $element) {
+      if (isset($element['id'])) {
         self::removeElementFromWebservice($element);
       }
     }

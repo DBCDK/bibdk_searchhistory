@@ -46,7 +46,7 @@ function bibdk_searchhistory_menu() {
   );
 
   $items['user/searchhistory'] = array(
-    'title' => t('Search history'),
+    'title' => 'Search history',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('bibdk_searchhistory_form'),
     'access arguments' => array('access content'),

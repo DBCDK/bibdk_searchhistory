@@ -1,17 +1,20 @@
 <?php
 
-/** Add search history element to provider webservice
+/**
+ * @file
+ * Add search history element to provider webservice
  * @param $element
  * @param null $user
  * @return mixed
  */
-function _bibdk_searchhistory_add_element_webservice($element, $user = null) {
+
+function _bibdk_searchhistory_add_element_webservice($element, $user = NULL) {
   if ($response = _bibdk_searchhistory_call_webservice('add_searchhistory', $element, $user)) {
     $xpath = bibdk_searchhistory_webservice_responce_xpath($response['response']);
     $ids = bibdk_searchhistory_parse_id($xpath);
     return reset($ids);
   }
-  return null;
+  return NULL;
 }
 
 /** Remove search history element to provider webservice
@@ -19,21 +22,21 @@ function _bibdk_searchhistory_add_element_webservice($element, $user = null) {
  * @param null $user
  * @return mixed
  */
-function _bibdk_searchhistory_remove_element_webservice($element, $user = null) {
+function _bibdk_searchhistory_remove_element_webservice($element, $user = NULL) {
   if ($response = _bibdk_searchhistory_call_webservice('remove_searchhistory', $element, $user)) {
     $xpath = bibdk_searchhistory_webservice_responce_xpath($response['response']);
     $ids = bibdk_searchhistory_parse_id($xpath);
     return reset($ids);
   }
-  return null;
+  return NULL;
 }
 
 /** Get search history from provider webservice
  * @param null $user
  * @return array
  */
-function _bibdk_searchhistory_get_elements_webservice($user = null) {
-  if ($response = _bibdk_searchhistory_call_webservice('get_searchhistory', null, $user)) {
+function _bibdk_searchhistory_get_elements_webservice($user = NULL) {
+  if ($response = _bibdk_searchhistory_call_webservice('get_searchhistory', NULL, $user)) {
     $xpath = bibdk_searchhistory_webservice_responce_xpath($response['response']);
     return bibdk_searchhistory_parse_content($xpath);
   }
@@ -75,7 +78,7 @@ function bibdk_searchhistory_webservice_responce_xpath($xml) {
   $dom = new DomDocument();
   if (!@$dom->loadXML($xml)) {
     if (variable_get('bibdk_provider_enable_logging')) {
-      watchdog('bibdk_cart', t('BIBDK searchHistory could not load response: %xml', array('%xml' => var_export($xml, TRUE))), array(), WATCHDOG_ERROR);
+      watchdog('bibdk_cart', 'BIBDK searchHistory could not load response: %xml', array('%xml' => var_export($xml, TRUE)), WATCHDOG_ERROR, $link = NULL);
     }
     return array();
   }
