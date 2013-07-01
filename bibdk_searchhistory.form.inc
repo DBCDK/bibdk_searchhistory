@@ -10,6 +10,8 @@
  */
 function bibdk_searchhistory_form($form, $form_state) {
 
+  drupal_set_title(t('Searchhistory'));
+  
   $elements = BibdkSearchHistory::getAllElements();
   $search_views = bibdk_searchhistory_get_views($elements);
   $form['#attributes']['class'] = array(
