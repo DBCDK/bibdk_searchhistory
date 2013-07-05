@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * @file
  * Create the tableselect form with searchresults and possibly saved searches
  *
  * @param array $form
@@ -76,7 +77,7 @@ function bibdk_searchhistory_form($form, $form_state) {
  * @param $cql
  * @return string
  */
-function _bibdk_searchhistory_get_cql($cql){
+function _bibdk_searchhistory_get_cql($cql) {
   return function_exists('ting_openformat_get_cql_commando') ? ting_openformat_get_cql_commando($cql) : ' ' . $cql . ' ';
 }
 
@@ -168,7 +169,7 @@ function bibdk_searchhistory_form_combine($form, $form_state) {
     }
   }
 
-  $new_string = '('. implode($combinator, $combined) . ')';
+  $new_string = '(' . implode($combinator, $combined) . ')';
 
   drupal_goto('search/work/' . $new_string);
 }
@@ -178,10 +179,10 @@ function bibdk_searchhistory_form_combine($form, $form_state) {
  * @param $string
  * @return string
  */
-function _bibdk_searchhistory_format_combine_string($string){
-  if (strpos($string, ' ') !== false){
-    $string = substr($string, 0, 1)  != '(' ? '('.$string : $string;
-    $string = substr($string, -1)  != ')' ? $string.')' : $string;
+function _bibdk_searchhistory_format_combine_string($string) {
+  if (strpos($string, ' ') !== FALSE) {
+    $string = substr($string, 0, 1)  != '(' ? '(' . $string : $string;
+    $string = substr($string, -1)  != ')' ? $string . ')' : $string;
   }
   return $string;
 }
@@ -217,7 +218,7 @@ function bibdk_searchhistory_action_link($element) {
   }
   static $c;
   $c++;
-  $saved = isset($element['id']) ? true : false;
+  $saved = isset($element['id']) ? TRUE : FALSE;
   $serial_element = urlencode(serialize($element));
   $render = array(
     '#type' => 'link',

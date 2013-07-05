@@ -1,8 +1,10 @@
 <?php
 
 /**
+ * @file
  * Implements hook_bibdk_mypage_tabs().
  */
+
 function bibdk_searchhistory_bibdk_mypage_tabs($max_rows = 3) {
   global $user;
 
@@ -19,6 +21,8 @@ function bibdk_searchhistory_bibdk_mypage_tabs($max_rows = 3) {
 
 function bibdk_searchhistory_my_page_get_rows($max_rows) {
   global $user;
+  $ret = array();
+
   if (ding_user_is_provider_user($user)) {
     $header['memolist'] = t('Memolist');
     $session_history = BibdkSearchHistory::getAllElements();
@@ -28,7 +32,7 @@ function bibdk_searchhistory_my_page_get_rows($max_rows) {
     $session_history = array_slice($session_history, 0, $max_rows);
     foreach ($session_history as $searchstring => $search) {
       $ret[] = array(
-        'item_row' => isset($item->manifestation) ? $item->manifestation->getTitle() : '',
+        'item_row' => isset($search['string']) ? $search['string'] : '',
       );
     }
   }
@@ -37,4 +41,7 @@ function bibdk_searchhistory_my_page_get_rows($max_rows) {
       'item_row' => t('No searches executed yet'),
     );
   }
+
+  return $ret;
+
 }
