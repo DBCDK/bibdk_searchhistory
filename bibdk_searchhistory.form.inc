@@ -171,22 +171,38 @@ function bibdk_searchhistory_form_combine($form, $form_state) {
     }
   }
 
-  $new_string = '(' . implode($combinator, $combined) . ')';
+  $new_string = implode($combinator, $combined);
 
   drupal_goto('search/work/' . $new_string);
 }
 
-
-/** Helper function to add parentheses to strings with spaces
+/**
+ * Helper function to add enclosing parentheses to strings with spaces and/or parentheses
+ *
+ * Parentheses in input string are already balanced.
+ *
  * @param $string
  * @return string
  */
 function _bibdk_searchhistory_format_combine_string($string) {
-  if (strpos($string, ' ') !== FALSE) {
-    $string = substr($string, 0, 1)  != '(' ? '(' . $string : $string;
-    $string = substr($string, -1)  != ')' ? $string . ')' : $string;
+  $stack = array();
+  $tokens = preg_split('/([() ])/', trim($string), 0, PREG_SPLIT_DELIM_CAPTURE);
+
+  foreach ($tokens as $token) {
+    if ($token == ')') {
+      while (array_pop($stack) != '(') {}
+    }
+    else {
+      array_push($stack, $token);
+    }
   }
-  return $string;
+
+  if (count($stack) == 1 || count($stack) == 2 && $stack[0] == '' && $stack[1] == '') {
+    return $string;
+  }
+  else {
+    return '(' . $string . ')';
+  }
 }
 
 /** Generates a view for each element in the search history
