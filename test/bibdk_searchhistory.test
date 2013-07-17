@@ -14,7 +14,7 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Bibdk Search History functionality',
       'description' => t('Test the functionality of Bibdk Search History'),
-      'group' => 'bibliotek.dk',
+      'group' => 'bibliotek.dk - Search History',
     );
   }
 
@@ -183,4 +183,38 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
   }
 
 
+}
+
+class BibdkSearchHistoryUnitTest extends DrupalUnitTestCase {
+  public function getInfo() {
+    return array(
+      'name' => 'Bibdk Search History unit testing',
+      'description' => t('Test functions in Bibdk Search History'),
+      'group' => 'bibliotek.dk - Search History',
+    );
+  }
+
+  public function setUp() {
+    drupal_load('module', 'bibdk_searchhistory');
+    module_load_include('inc', 'bibdk_searchhistory', 'bibdk_searchhistory.form');
+    parent::setUp();
+  }
+
+  public function testFormatCombineString() {
+    $pairs = array(
+      'one' => 'one',
+      'one ' => 'one ',
+      'one two' => '(one two)',
+      '(one two)' => '(one two)',
+      '(one) two' => '((one) two)',
+      'one (two)' => '(one (two))',
+      '(one) (two)' => '((one) (two))',
+      '(one)two' => '((one)two)',
+      'one(two)' => '(one(two))',
+      );
+
+    foreach ($pairs as $input => $expected) {
+      $this->assertEqual(_bibdk_searchhistory_format_combine_string($input), $expected);
+    }
+  }
 }
