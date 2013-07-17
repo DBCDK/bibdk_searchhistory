@@ -194,6 +194,12 @@ class BibdkSearchHistoryUnitTest extends DrupalUnitTestCase {
     );
   }
 
+  public function setUp() {
+    drupal_load('module', 'bibdk_searchhistory');
+    module_load_include('inc', 'bibdk_searchhistory', 'bibdk_searchhistory.form');
+    parent::setUp();
+  }
+
   public function testFormatCombineString() {
     $pairs = array(
       'one' => 'one',
