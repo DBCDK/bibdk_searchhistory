@@ -19,7 +19,7 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
   }
 
   public function setUp() {
-    parent::setUp('search', 'ting_openformat', 'bibdk_searchhistory', 'ding_provider', 'bibdk_provider', 'profile2', 'devel'); //, 'bibdk_webservice');
+    parent::setUp('search', 'ting_openformat', 'bibdk_searchhistory', 'ding_provider', 'bibdk_provider', 'profile2'); //, 'bibdk_webservice');
     variable_set('ting_search_url', 'http://lakiseks.dbc.dk/openbibdk/0.5/');
     variable_set('bibdk_provider_webservice_url', 'http://guesstimate.dbc.dk/~svi/openuserinfo/server.php');
     variable_set('bibdk_provider_security_code', 'testhest');
