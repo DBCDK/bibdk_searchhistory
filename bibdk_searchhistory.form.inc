@@ -11,7 +11,7 @@
 function bibdk_searchhistory_form($form, $form_state) {
 
   drupal_set_title(t('Searchhistory'));
-  
+
   $elements = BibdkSearchHistory::getAllElements();
   $search_views = bibdk_searchhistory_get_views($elements);
   $form['#attributes']['class'] = array(
@@ -118,12 +118,6 @@ function bibdk_searchhistory_get_primary_actions() {
         'button-as-link',
       ),
     ),
-    '#ajax' => array(
-      'callback' => 'bibdk_searchhistory_form_delete',
-    ),
-    '#attached' => array(
-      'js' => array(drupal_get_path('module', 'bibdk_searchhistory') . '/js/bibdk_searchhistory.ajax.js'),
-    ),
   );
 
   return $elements;
@@ -151,6 +145,7 @@ function bibdk_searchhistory_form_delete($form, &$form_state) {
       // remove from webservice
       if (isset($element['id'])) {
         BibdkSearchHistory::removeElementFromWebservice($element);
+        BibdkSearchHistory::removeElementFromSession($element);
       }
     }
   }
@@ -234,21 +229,21 @@ function bibdk_searchhistory_action_link($element) {
       '#markup' => t('login to save'),
     );
   }
-  static $c;
-  $c++;
-  $saved = isset($element['id']) ? TRUE : FALSE;
+  static $count;
+  $id = isset($element['id']) ? $element['id'] : 'unsaved_'.$count++;
   $serial_element = urlencode(serialize($element));
+
   $render = array(
     '#type' => 'link',
     '#href' => '',
-    '#title' => $saved ? t('Remove') : t('Add'),
+    '#title' => isset($element['id']) ? t('Remove') : t('Add'),
     '#options' => array(
       'attributes' => array(
-        'element-id' => $c,
+        'element-id' => $id,
       ),
     ),
     '#ajax' => array(
-      'path' => 'bibdk_searchhistory/ajax/' . $c . '/' . $serial_element,
+      'path' => 'bibdk_searchhistory/ajax/' . $id . '/' . $serial_element,
       'callback' => 'bibdk_searchhistory_action_link_callback',
     ),
     '#attached' => array(
@@ -264,16 +259,17 @@ function bibdk_searchhistory_action_link($element) {
  * @param $count
  * @param $serial_element
  */
-function bibdk_searchhistory_action_link_callback($count, $serial_element) {
+function bibdk_searchhistory_action_link_callback($unsaved_id, $serial_element) {
   $element = unserialize(urldecode($serial_element));
   if (!isset($element['id'])) {
     $element = BibdkSearchHistory::addElementToWebservice($element);
     $link = bibdk_searchhistory_action_link($element);
-    $commands[] = ajax_command_replace('[element-id=' . $count . ']', drupal_render($link));
+    $commands[] = ajax_command_replace('[element-id=' . $unsaved_id . ']', drupal_render($link));
   }
   else {
-    $result = BibdkSearchHistory::removeElementFromWebservice($element); //xxx
-    $commands[] = bibdk_searchhistory_ajax_command('[element-id=' . $count . ']');
+    BibdkSearchHistory::removeElementFromWebservice($element);
+    $id = $element['id'];
+    $commands[] = bibdk_searchhistory_ajax_command('[element-id=' . $id . ']');
   }
 
   $callback = array('#type' => 'ajax', '#commands' => $commands);

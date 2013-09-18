@@ -10,7 +10,7 @@
         attach: function (context) {
             var basePath = Drupal.settings.basePath;
 
-            $('.select-all').click(function (e) {
+            $('.select-all', context).click(function (e) {
                 e.preventDefault();
                 if ($('input.combine-select').length == $('input.combine-select:checked').length) {
                     $('input.combine-select').attr('checked', false);
@@ -22,7 +22,7 @@
             });
 
             //single rows
-            $('input.combine-select').change(function () {
+            $('input.combine-select', context).change(function () {
                 countSelected()
             });
 
