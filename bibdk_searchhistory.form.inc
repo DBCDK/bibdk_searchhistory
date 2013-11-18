@@ -74,8 +74,10 @@ function bibdk_searchhistory_form($form, $form_state) {
   return $form;
 }
 
-/** Wrapper for ting_openformat_get_cql_commando
- * see ting_openformat.module
+/**
+ * Wrapper for ting_openformat_get_cql_commando
+ * See ting_openformat.module
+ * 
  * @param $cql
  * @return string
  */
@@ -124,11 +126,12 @@ function bibdk_searchhistory_get_primary_actions() {
 }
 
 /**
- * form callback function. Removes selected entries from $_SESSION['searches] array and deletes posts in db if necessary
+ * Form callback function. Removes selected entries from $_SESSION['searches] array and deletes posts in db if necessary
  *
  * @global Array $user
  * @param array $form
  * @param array $form_state
+ * @return array
  */
 function bibdk_searchhistory_form_delete($form, &$form_state) {
   $searches = $form_state['values']['bibdk_search_history_table'];
@@ -254,9 +257,10 @@ function bibdk_searchhistory_action_link($element) {
 }
 
 
-/** Ajax callback : add/remove search history element from webservice
+/**
+ * Ajax callback : add/remove search history element from webservice
  *
- * @param $count
+ * @param $unsaved_id
  * @param $serial_element
  */
 function bibdk_searchhistory_action_link_callback($unsaved_id, $serial_element) {
@@ -276,7 +280,8 @@ function bibdk_searchhistory_action_link_callback($unsaved_id, $serial_element) 
   ajax_deliver($callback);
 }
 
-/** Ajax command to remove element from dom
+/**
+ * Ajax command to remove element from dom
  *
  * @param $selector
  * @return array
@@ -288,7 +293,8 @@ function bibdk_searchhistory_ajax_command($selector) {
   );
 }
 
-/** Generate views from searchhistory elements
+/**
+ * Generate views from searchhistory elements
  *
  * @param $elements
  * @return array
