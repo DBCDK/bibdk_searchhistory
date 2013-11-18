@@ -77,7 +77,7 @@ function bibdk_searchhistory_form($form, $form_state) {
 /**
  * Wrapper for ting_openformat_get_cql_commando
  * See ting_openformat.module
- * 
+ *
  * @param $cql
  * @return string
  */
@@ -101,11 +101,13 @@ function bibdk_searchhistory_get_primary_actions() {
     '#title' => t('mark_all_none', array(), array('context' => 'bibdk_cart')),
     '#title_display' => 'invisible',
     '#href' => '',
-    '#options' => array('attributes' => array(
-      'class' => array(
-        'select-all'
+    '#options' => array(
+      'attributes' => array(
+        'class' => array(
+          'select-all'
+        ),
+        'title' => t('Go to cart')
       ),
-      'title' => t('Go to cart')),
     ),
 
   );
@@ -152,6 +154,7 @@ function bibdk_searchhistory_form_delete($form, &$form_state) {
       }
     }
   }
+
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
@@ -188,7 +191,8 @@ function _bibdk_searchhistory_format_combine_string($string) {
 
   foreach ($tokens as $token) {
     if ($token == ')') {
-      while (array_pop($stack) != '(') {}
+      while (array_pop($stack) != '(') {
+      }
     }
     else {
       array_push($stack, $token);
@@ -209,11 +213,15 @@ function _bibdk_searchhistory_format_combine_string($string) {
  * @return array
  */
 function _bibdk_searchhistory_element_view($element) {
-  $string = $element['string'];
+  $string = !empty($element['string']) ? $element['string'] : t('[empty_search]', array(), array('context' => 'bibdk_searchhistory'));
+
   $count = $element['count'];
   $memolist = bibdk_searchhistory_action_link($element);
+
+  $params = isset($element['params']) ? $element['params'] : array();
+
   return array(
-    'search_string' => l($string, 'search/work/' . $string),
+    'search_string' => l($string, 'search/work/' . $string, array('query' => $params)),
     'result_count' => $count,
     'memolist' => drupal_render($memolist),
   );
@@ -233,7 +241,7 @@ function bibdk_searchhistory_action_link($element) {
     );
   }
   static $count;
-  $id = isset($element['id']) ? $element['id'] : 'unsaved_'.$count++;
+  $id = isset($element['id']) ? $element['id'] : 'unsaved_' . $count++;
   $serial_element = urlencode(serialize($element));
 
   $render = array(
@@ -253,6 +261,7 @@ function bibdk_searchhistory_action_link($element) {
       'js' => array(drupal_get_path('module', 'bibdk_searchhistory') . '/js/bibdk_searchhistory.ajax.js'),
     ),
   );
+
   return $render;
 }
 
@@ -304,5 +313,6 @@ function bibdk_searchhistory_get_views($elements) {
   foreach ($elements as $element) {
     $views[$element['string']] = _bibdk_searchhistory_element_view($element);
   }
+
   return $views;
 }

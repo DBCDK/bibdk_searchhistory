@@ -79,15 +79,19 @@ function bibdk_searchhistory_ctools_plugin_api($module, $api) {
 
 /**
  * Implements hook_ting_openformat_search_results.
+ *
  * Called from ting_search when a search is being executed.
  * Saves the search string and number of results in the $_SESSION variable
  *
  * @param String $keys - searchstring
  * @param int $searchsresult - result count
+ * @param array $conditions
+ * @param String $params
  */
-function bibdk_searchhistory_ting_openformat_search_results($keys, $searchsresult) {
+function bibdk_searchhistory_ting_openformat_search_results($keys, $searchsresult, $params) {
   $element = array(
     'string' => $keys,
+    'params' => $params,
     'count' => isset($searchsresult->numTotalObjects) ? $searchsresult->numTotalObjects : 0,
     'timestamp' => time(),
   );
