@@ -6,6 +6,7 @@
  */
 
 class BibdkSearchHistory {
+
   private static $elements = NULL;
 
   /**
@@ -14,10 +15,12 @@ class BibdkSearchHistory {
   public static function addElementToWebservice($element) {
     $object = array(
       'oui:searchHistoryString' => $element['string'],
+      'oui:searchHistoryParams' => $element['params'],
       'oui:searchHistoryTime' => $element['timestamp'],
       'oui:searchHistoryCount' => $element['count'],
     );
     $element['id'] = _bibdk_searchhistory_add_element_webservice($object);
+
     return $element;
   }
 
@@ -32,6 +35,7 @@ class BibdkSearchHistory {
     if (array_key_exists($string, $_SESSION['searches'])) {
       unset($_SESSION['searches'][$string]);
     }
+
     return _bibdk_searchhistory_remove_element_webservice($object);
   }
 
@@ -40,8 +44,9 @@ class BibdkSearchHistory {
    * Get all searchhistory elements
    */
   public static function getAllElements() {
-      $elements = _bibdk_searchhistory_get_elements_webservice();
-      $elements += self::getSession();
+    $elements = _bibdk_searchhistory_get_elements_webservice();
+    $elements += self::getSession();
+
     return $elements;
   }
 
@@ -51,6 +56,7 @@ class BibdkSearchHistory {
    */
   public static function getElement($string) {
     $elements = self::getAllElements();
+
     return (isset($elements[$string])) ? $elements[$string] : NULL;
   }
 
@@ -59,8 +65,10 @@ class BibdkSearchHistory {
    * @return array
    */
   public static function getSession() {
-    if (!isset($_SESSION['searches']))
+    if (!isset($_SESSION['searches'])) {
       $_SESSION['searches'] = array();
+    }
+
     return $_SESSION['searches'];
   }
 
@@ -78,15 +86,16 @@ class BibdkSearchHistory {
    */
   public static function removeElementFromSession($element) {
     $string = $element['string'];
-    if (isset($_SESSION['searches'][$string]))
+    if (isset($_SESSION['searches'][$string])) {
       unset($_SESSION['searches'][$string]);
+    }
   }
 
   /**
    * If where are more searches in session than limit allows remove oldest element
    */
   private static function _checkSessionLimit() {
-    $limit = (int)variable_get('search_history_save_limit');
+    $limit = (int) variable_get('search_history_save_limit');
     if (count($_SESSION['searches']) > $limit && $limit > 0) {
       array_shift($_SESSION['searches']);
     }
