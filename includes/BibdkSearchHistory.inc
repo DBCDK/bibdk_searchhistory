@@ -15,12 +15,11 @@ class BibdkSearchHistory {
   public static function addElementToWebservice($element) {
     $object = array(
       'oui:searchHistoryString' => $element['string'],
-      'oui:searchHistoryParams' => $element['params'],
+      'oui:searchHistoryParams' => (isset($element['params'])) ? json_encode($element['params']) : json_encode(array()),
       'oui:searchHistoryTime' => $element['timestamp'],
       'oui:searchHistoryCount' => $element['count'],
     );
     $element['id'] = _bibdk_searchhistory_add_element_webservice($object);
-
     return $element;
   }
 
