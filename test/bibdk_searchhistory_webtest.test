@@ -21,7 +21,7 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
   public function setUp() {
     parent::setUp('search', 'ting_openformat', 'bibdk_searchhistory', 'ding_provider', 'bibdk_provider', 'profile2'); //, 'bibdk_webservice');
     variable_set('ting_search_url', 'http://lakiseks.dbc.dk/openbibdk/next/');
-    variable_set('bibdk_provider_webservice_url', 'http://guesstimate.dbc.dk/~svi/openuserinfo/server.php');
+    variable_set('bibdk_provider_webservice_url', 'http://guesstimate.dbc.dk/~mmj/OpenUserinfo/server.php');
     variable_set('bibdk_provider_security_code', 'testhest');
     variable_set('search_active_modules', array('ting_openformat' => 'ting_openformat'));
     variable_set('search_default_module', 'ting_openformat');
@@ -51,6 +51,7 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
     // Test if element is added to session
     $element = array(
       'string' => 'test string',
+      'params' => array('testArr' => array()),
       'timestamp' => 'testTime',
       'count' => 1234
     );
@@ -87,6 +88,7 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
 
     $element = array(
       'searchHistoryString' => 'test string',
+      'searchHistoryParams' => json_encode(array('testArr' => array())),
       'searchHistoryTime' => 'testTime',
       'searchHistoryCount' => 1234
     );
@@ -97,6 +99,7 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
 
     $element = array(
       'searchHistoryString' => 'test string 2',
+      'searchHistoryParams' => json_encode(array('testArr_2' => array())),
       'searchHistoryTime' => 'testTime 2',
       'searchHistoryCount' => 12345
     );
@@ -110,6 +113,7 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
 
     $this->assertTrue($list['test string'] == array(
       'string' => 'test string',
+        'params' => array('testArr' => array()),
       'time' => 'testTime',
       'count' => 1234,
       'id' => $result,
@@ -117,6 +121,7 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
 
     $this->assertTrue($list['test string 2'] == array(
       'string' => 'test string 2',
+        'params' => array('testArr_2' => array()),
       'time' => 'testTime 2',
       'count' => 12345,
       'id' => $result2,
