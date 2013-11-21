@@ -25,7 +25,10 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
     variable_set('bibdk_provider_security_code', 'testhest');
     variable_set('search_active_modules', array('ting_openformat' => 'ting_openformat'));
     variable_set('search_default_module', 'ting_openformat');
-    user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('access content', 'search content'));
+    user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array(
+      'access content',
+      'search content'
+    ));
 
     menu_rebuild();
 
@@ -65,17 +68,17 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
     $element = BibdkSearchHistory::addElementToWebservice($element);
     $result = BibdkSearchHistory::getAllElements();
     $this->assertTrue($result[$element['string']]['id'] == $element['id'], t('search: @string added to webservice and given id @id', array(
-      '@string' => $element['string'],
-      '@id' => $element['id'],
-    )));
+        '@string' => $element['string'],
+        '@id' => $element['id'],
+      )));
 
     //Test if element is removed from webservice & Session
     BibdkSearchHistory::removeElementFromWebservice($element);
     $result = BibdkSearchHistory::getAllElements();
     $expected_result = array();
     $this->assertTrue($result == $expected_result, t('search: @string removed from webservice and session', array(
-      '@string' => $element['string'],
-    )));
+        '@string' => $element['string'],
+      )));
 
 
     // Delete provider user
@@ -106,26 +109,29 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
 
     // Test add searchhistory element id is incrementing
     $result2 = _bibdk_searchhistory_add_element_webservice($element, $user);
-    $this->assertTrue(($result2-$result) >= 1, t('@res2 is incremented 1 from @res1', array('@res1' => $result, '@res2' => $result2)));
+    $this->assertTrue(($result2 - $result) >= 1, t('@res2 is incremented 1 from @res1', array(
+        '@res1' => $result,
+        '@res2' => $result2
+      )));
 
     //Test searchHistory list is returned
-    $list =_bibdk_searchhistory_get_elements_webservice($user);
+    $list = _bibdk_searchhistory_get_elements_webservice($user);
 
     $this->assertTrue($list['test string'] == array(
-      'string' => 'test string',
+        'string' => 'test string',
         'params' => array('testArr' => array()),
-      'time' => 'testTime',
-      'count' => 1234,
-      'id' => $result,
-    ), t('element with id: @result is on the list of search history results', array('@result' => $result)));
+        'time' => 'testTime',
+        'count' => 1234,
+        'id' => $result,
+      ), t('element with id: @result is on the list of search history results', array('@result' => $result)));
 
     $this->assertTrue($list['test string 2'] == array(
-      'string' => 'test string 2',
+        'string' => 'test string 2',
         'params' => array('testArr_2' => array()),
-      'time' => 'testTime 2',
-      'count' => 12345,
-      'id' => $result2,
-    ), t('element with id: @result is on the list of search history results', array('@result' => $result2)));
+        'time' => 'testTime 2',
+        'count' => 12345,
+        'id' => $result2,
+      ), t('element with id: @result is on the list of search history results', array('@result' => $result2)));
 
     // Test element is removed
     $element = array(
@@ -135,7 +141,7 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
     $this->assertTrue($result == $remove_result);
 
     //Confirm element is removed
-    $list =_bibdk_searchhistory_get_elements_webservice($user);
+    $list = _bibdk_searchhistory_get_elements_webservice($user);
 
     $this->assertFalse(isset($list[$result]), t('element with id: @result is NOT on the list of search history results', array('@result' => $result)));
 
@@ -144,13 +150,11 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
   }
 
 
-
   private function _createProviderUser() {
     $name = 'dummy@dbc.dk';
     $pass = 'pass';
     bibdk_provider_user_create_account($name, $pass);
-    db_insert('authmap')
-      ->fields(array(
+    db_insert('authmap')->fields(array(
         'uid' => 2,
         'module' => 'ding_user',
         'authname' => $name
@@ -160,22 +164,23 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
     $user->uid = 2;
     $user->name = $name;
     $user->roles = array();
-    ding_user_save_creds(array('creds' => array(
-      'name' => $name,
-      'pass' => $pass,
-    )), $user);
+    ding_user_save_creds(array(
+      'creds' => array(
+        'name' => $name,
+        'pass' => $pass,
+      )
+    ), $user);
+
     return $user;
   }
 
   private function _removeProviderUser() {
     $name = 'dummy@dbc.dk';
-    db_delete('authmap')
-      ->condition('authname', $name)
-      ->execute();
+    db_delete('authmap')->condition('authname', $name)->execute();
     bibdk_provider_user_delete_account($name);
   }
 
-   // check if profiletype is deleted when module is disabled and created after module has been enabled
+  // check if profiletype is deleted when module is disabled and created after module has been enabled
   // and user logs in.
   private function _testCheckProfileTypeDelete() {
     $this->_createProviderUser();
@@ -191,7 +196,7 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
     // we have to submit the user_login_block form to log in as provider user
     $edit['name'] = 'dummy@dbc.dk';
     $edit['pass'] = 'pass';
-    $this->drupalPost('user', $edit, 'Log in', array(), array(), 'user-login', NULL );
+    $this->drupalPost('user', $edit, 'Log in', array(), array(), 'user-login', NULL);
 
     // assert that the profiletype has been created
     $type = profile2_get_types($profile_type);
@@ -199,6 +204,5 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
 
     $this->_removeProviderUser();
   }
-
 
 }
