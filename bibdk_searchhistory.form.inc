@@ -221,7 +221,7 @@ function _bibdk_searchhistory_element_view($element) {
   $params = isset($element['params']) ? $element['params'] : array();
 
   return array(
-    'search_string' => l($string, 'search/work/' . $string, array('query' => $params)),
+    'search_string' => l($string, 'search/work/', array('query' => $params)),
     'result_count' => $count,
     'memolist' => drupal_render($memolist),
   );
