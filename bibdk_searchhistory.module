@@ -90,7 +90,7 @@ function bibdk_searchhistory_ctools_plugin_api($module, $api) {
  */
 function bibdk_searchhistory_ting_openformat_search_results($keys, $searchsresult, $params) {
   $element = array(
-    'string' => $keys,
+    'string' => (isset($keys) && !empty($keys)) ? $keys : bibdk_searchhistory_parse_params($params),
     'params' => $params,
     'count' => isset($searchsresult->numTotalObjects) ? $searchsresult->numTotalObjects : 0,
     'timestamp' => time(),

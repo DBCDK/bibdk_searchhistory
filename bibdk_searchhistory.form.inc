@@ -130,7 +130,6 @@ function bibdk_searchhistory_get_primary_actions() {
 /**
  * Form callback function. Removes selected entries from $_SESSION['searches] array and deletes posts in db if necessary
  *
- * @global Array $user
  * @param array $form
  * @param array $form_state
  * @return array
@@ -213,21 +212,21 @@ function _bibdk_searchhistory_format_combine_string($string) {
  * @return array
  */
 function _bibdk_searchhistory_element_view($element) {
-  $string = !empty($element['string']) ? $element['string'] : t('[empty_search]', array(), array('context' => 'bibdk_searchhistory'));
-
+  $string = !empty($element['string']) ? $element['string'] : bibdk_searchhistory_parse_params($element['params']);
   $count = $element['count'];
   $memolist = bibdk_searchhistory_action_link($element);
 
   $params = isset($element['params']) ? $element['params'] : array();
 
   return array(
-    'search_string' => l($string, 'search/work/', array('query' => $params)),
+    'search_string' => l($string, 'search/work/', array('query' => $params, 'html' => TRUE)),
     'result_count' => $count,
     'memolist' => drupal_render($memolist),
   );
 }
 
-/** Create an add remove button for logged in users
+/**
+ * Create an add/remove button for logged in users
  *
  * @param $element
  * @return array
@@ -311,8 +310,29 @@ function bibdk_searchhistory_ajax_command($selector) {
 function bibdk_searchhistory_get_views($elements) {
   $views = array();
   foreach ($elements as $element) {
-    $views[$element['string']] = _bibdk_searchhistory_element_view($element);
+    $string = (isset($element['string']) && !empty($element['string'])) ? $element['string'] : bibdk_searchhistory_parse_params($element['params']);
+    $views[$string] = _bibdk_searchhistory_element_view($element);
   }
 
   return $views;
+}
+
+/**
+ * Parse search params into a string seperated by <br />'s to obtain a nicer
+ * view
+ *
+ * @param array $params
+ * @return string $string
+ */
+function bibdk_searchhistory_parse_params($params){
+  $string = '';
+  if(!empty($params['qe'])){
+    foreach($params['qe'] as $param => $value){
+      if(strpos($param, 'dkcclterm') !== FALSE){
+        $string .= $param . ' = ' . implode(', ', $value) . '<br />';
+      }
+    }
+  }
+
+  return $string;
 }
