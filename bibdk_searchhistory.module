@@ -38,7 +38,7 @@ function bibdk_searchhistory_menu() {
     'type' => MENU_CALLBACK,
   );
   $items['admin/config/search/bibdk_searchhistory'] = array(
-    'title' => 'Bibdk search history',
+    'title' => 'Search History',
     'description' => 'Settings for display of search history',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('bibdk_searchhistory_admin'),
@@ -85,10 +85,13 @@ function bibdk_searchhistory_ctools_plugin_api($module, $api) {
  *
  * @param String $keys - searchstring
  * @param int $searchsresult - result count
- * @param array $conditions
  * @param String $params
  */
 function bibdk_searchhistory_ting_openformat_search_results($keys, $searchsresult, $params) {
+  if(!empty($params['facets']) && variable_get('search_history_save_facet_search', 0) !== 1){
+    return;
+  }
+
   $element = array(
     'string' => (isset($keys) && !empty($keys)) ? $keys : bibdk_searchhistory_parse_params($params),
     'params' => $params,
