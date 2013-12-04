@@ -326,10 +326,11 @@ function bibdk_searchhistory_get_views($elements) {
  */
 function bibdk_searchhistory_parse_params($params){
   $string = '';
+  $accepted_params = explode(',', variable_get('search_history_accepted_params', 'dkcclterm,term.type'));
 
   if(!empty($params['qe'])){
     foreach($params['qe'] as $param => $value){
-      if(_bibdk_searchhistory_accecpted_param($param)){
+      if(_bibdk_searchhistory_accecpted_param($param, $accepted_params)){
         $string .= $param . ' = ' . implode(', ', $value) . '<br />';
       }
     }
@@ -347,11 +348,11 @@ function bibdk_searchhistory_parse_params($params){
  * search_history_accepted_params
  *
  * @param string $param
+ * @param $accepted_params
  * @return bool
  */
-function _bibdk_searchhistory_accecpted_param($param){
-  $arr = explode(',', variable_get('search_history_accepted_params', 'dkcclterm,term.type'));
-  foreach($arr as $accepted){
+function _bibdk_searchhistory_accecpted_param($param, $accepted_params){
+  foreach($accepted_params as $accepted){
     if(!empty($accepted) && strpos($param, $accepted) !== FALSE){
       return TRUE;
     }
