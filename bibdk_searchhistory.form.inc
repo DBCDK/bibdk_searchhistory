@@ -219,7 +219,10 @@ function _bibdk_searchhistory_element_view($element) {
   $params = isset($element['params']) ? $element['params'] : array();
 
   return array(
-    'search_string' => l($string, 'search/work/', array('query' => $params, 'html' => TRUE)),
+    'search_string' => l($string, 'search/work/', array(
+      'query' => $params,
+      'html' => TRUE
+    )),
     'result_count' => $count,
     'memolist' => drupal_render($memolist),
   );
@@ -324,19 +327,19 @@ function bibdk_searchhistory_get_views($elements) {
  * @param array $params
  * @return string $string
  */
-function bibdk_searchhistory_parse_params($params){
+function bibdk_searchhistory_parse_params($params) {
   $string = '';
   $accepted_params = explode(',', variable_get('search_history_accepted_params', 'dkcclterm,term.type'));
 
-  if(!empty($params['qe'])){
-    foreach($params['qe'] as $param => $value){
-      if(_bibdk_searchhistory_accecpted_param($param, $accepted_params)){
+  if (!empty($params['qe'])) {
+    foreach ($params['qe'] as $param => $value) {
+      if (_bibdk_searchhistory_accecpted_param($param, $accepted_params)) {
         $string .= $param . ' = ' . implode(', ', $value) . '<br />';
       }
     }
   }
 
-  if(empty($string)){
+  if (empty($string)) {
     $string = t('empty_search', array(), array('context' => 'bibdk_searchhistory'));
   }
 
@@ -351,11 +354,12 @@ function bibdk_searchhistory_parse_params($params){
  * @param $accepted_params
  * @return bool
  */
-function _bibdk_searchhistory_accecpted_param($param, $accepted_params){
-  foreach($accepted_params as $accepted){
-    if(!empty($accepted) && strpos($param, $accepted) !== FALSE){
+function _bibdk_searchhistory_accecpted_param($param, $accepted_params) {
+  foreach ($accepted_params as $accepted) {
+    if (!empty($accepted) && strpos($param, $accepted) !== FALSE) {
       return TRUE;
     }
   }
+
   return FALSE;
 }
