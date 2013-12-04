@@ -32,4 +32,16 @@ class BibdkSearchHistoryUnitTest extends DrupalUnitTestCase {
       $this->assertEqual(_bibdk_searchhistory_format_combine_string($input), $expected, 'String combination succeeded');
     }
   }
+
+  public function testBibdk_searchhistory_accecpted_param(){
+    module_load_include('form.inc', 'bibdk_searchhistory');
+    $arr = array();
+    $this->assertFalse(_bibdk_searchhistory_accecpted_param('string', $arr), 'Returned false as expected');
+
+    $arr = array('sstring');
+    $this->assertFalse(_bibdk_searchhistory_accecpted_param('string', $arr), 'Returned false as expected');
+
+    $arr = array('string');
+    $this->assertTrue(_bibdk_searchhistory_accecpted_param('string', $arr), 'Returned true as expected');
+  }
 }
