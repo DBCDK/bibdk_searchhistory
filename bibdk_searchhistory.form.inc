@@ -326,13 +326,35 @@ function bibdk_searchhistory_get_views($elements) {
  */
 function bibdk_searchhistory_parse_params($params){
   $string = '';
+
   if(!empty($params['qe'])){
     foreach($params['qe'] as $param => $value){
-      if(strpos($param, 'dkcclterm') !== FALSE){
+      if(_bibdk_searchhistory_accecpted_param($param)){
         $string .= $param . ' = ' . implode(', ', $value) . '<br />';
       }
     }
   }
 
+  if(empty($string)){
+    $string = t('empty_search', array(), array('context' => 'bibdk_searchhistory'));
+  }
+
   return $string;
+}
+
+/**
+ * Checks if param is part of the string stored in th variable
+ * search_history_accepted_params
+ *
+ * @param string $param
+ * @return bool
+ */
+function _bibdk_searchhistory_accecpted_param($param){
+  $arr = explode(',', variable_get('search_history_accepted_params', 'dkcclterm,term.type'));
+  foreach($arr as $accepted){
+    if(!empty($accepted) && strpos($param, $accepted) !== FALSE){
+      return TRUE;
+    }
+  }
+  return FALSE;
 }
