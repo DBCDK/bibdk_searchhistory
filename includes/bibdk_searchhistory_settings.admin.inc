@@ -25,8 +25,8 @@ function bibdk_searchhistory_admin() {
     '#type' => 'textfield',
     '#title' => t('Params that should be accepted to display in search history'),
     '#size' => 50,
-    '#description' => t('Commaseperated values. No spaces! E.g. dkcclterm,term.type'),
-    '#default_value' => variable_get('search_history_accepted_params', 'dkcclterm,term.type'),
+    '#description' => t('Commaseperated values. No spaces! E.g. dkcclterm,term'),
+    '#default_value' => variable_get('search_history_accepted_params', 'dkcclterm,term'),
   );
 
   $form['actions'] = array('#type' => 'actions');

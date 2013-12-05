@@ -167,7 +167,8 @@ function bibdk_searchhistory_form_combine($form, $form_state) {
   $combinator = $form_state['values']['and_or_radios'];
   foreach ($searches as $search => $string) {
     if ($string) {
-      $combined[] = _bibdk_searchhistory_format_combine_string($string);
+      $string = str_replace('<br />' , $combinator, $string);
+      $combined[] = _bibdk_searchhistory_format_combine_string($string, $combinator);
     }
   }
 
@@ -329,12 +330,15 @@ function bibdk_searchhistory_get_views($elements) {
  */
 function bibdk_searchhistory_parse_params($params) {
   $string = '';
-  $accepted_params = explode(',', variable_get('search_history_accepted_params', 'dkcclterm,term.type'));
+  $accepted_params = explode(',', variable_get('search_history_accepted_params', 'dkcclterm,term'));
 
   if (!empty($params['qe'])) {
     foreach ($params['qe'] as $param => $value) {
       if (_bibdk_searchhistory_accecpted_param($param, $accepted_params)) {
-        $string .= $param . ' = ' . implode(', ', $value) . '<br />';
+        if(!empty($string)){
+          $string .= '<br />';
+        }
+        $string .= $param . ' = ' . implode(', ', $value);
       }
     }
   }
@@ -356,7 +360,7 @@ function bibdk_searchhistory_parse_params($params) {
  */
 function _bibdk_searchhistory_accecpted_param($param, $accepted_params) {
   foreach ($accepted_params as $accepted) {
-    if (!empty($accepted) && strpos($param, $accepted) !== FALSE) {
+    if (!empty($accepted) && strpos($param, $accepted) === 0) {
       return TRUE;
     }
   }
