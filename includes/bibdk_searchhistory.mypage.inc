@@ -32,7 +32,7 @@ function bibdk_searchhistory_my_page_get_rows($max_rows) {
     $session_history = array_slice($session_history, 0, $max_rows);
     foreach ($session_history as $searchstring => $search) {
       $ret[] = array(
-        'item_row' => isset($search['string']) && !empty($search['string']) ? $search['string'] : t('[empty_search]', array(), array('context' => 'bibdk_searchhistory')),
+        'item_row' => _bibdk_searchhistory_get_markup_for_search($search),
       );
     }
   }

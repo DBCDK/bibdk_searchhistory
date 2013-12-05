@@ -14,6 +14,7 @@ function bibdk_searchhistory_form($form, $form_state) {
 
   $elements = BibdkSearchHistory::getAllElements();
   $search_views = bibdk_searchhistory_get_views($elements);
+
   $form['#attributes']['class'] = array(
     'searchhistory',
   );
@@ -168,6 +169,9 @@ function bibdk_searchhistory_form_combine($form, $form_state) {
   foreach ($searches as $search => $string) {
     if ($string) {
       $string = str_replace('<br />' , $combinator, $string);
+      $element = BibdkSearchHistory::getElement($string);
+      $params = str_replace('<br />' , 'OG', bibdk_searchhistory_parse_params($element['params']));
+      $string .= (!empty($params)) ? ' OG ' . $params : '';
       $combined[] = _bibdk_searchhistory_format_combine_string($string, $combinator);
     }
   }
@@ -213,15 +217,16 @@ function _bibdk_searchhistory_format_combine_string($string) {
  * @return array
  */
 function _bibdk_searchhistory_element_view($element) {
-  $string = !empty($element['string']) ? $element['string'] : bibdk_searchhistory_parse_params($element['params']);
   $count = $element['count'];
   $memolist = bibdk_searchhistory_action_link($element);
 
-  $params = isset($element['params']) ? $element['params'] : array();
+  $link = !empty($element['params']['keys']) ? 'search/work/' . $element['params']['keys'] : 'search/work/';
+
+  $display = _bibdk_searchhistory_get_markup_for_search($element);
 
   return array(
-    'search_string' => l($string, 'search/work/', array(
-      'query' => $params,
+    'search_string' => l($display, $link, array(
+      'query' => $element['params'],
       'html' => TRUE
     )),
     'result_count' => $count,
@@ -314,7 +319,7 @@ function bibdk_searchhistory_ajax_command($selector) {
 function bibdk_searchhistory_get_views($elements) {
   $views = array();
   foreach ($elements as $element) {
-    $string = (isset($element['string']) && !empty($element['string'])) ? $element['string'] : bibdk_searchhistory_parse_params($element['params']);
+    $string = (!empty($element['params']['keys'])) ? $element['params']['keys'] : $element['string']; //_bibdk_searchhistory_get_markup_for_search($element);
     $views[$string] = _bibdk_searchhistory_element_view($element);
   }
 
@@ -330,6 +335,7 @@ function bibdk_searchhistory_get_views($elements) {
  */
 function bibdk_searchhistory_parse_params($params) {
   $string = '';
+
   $accepted_params = explode(',', variable_get('search_history_accepted_params', 'dkcclterm,term'));
 
   if (!empty($params['qe'])) {
@@ -341,10 +347,6 @@ function bibdk_searchhistory_parse_params($params) {
         $string .= $param . ' = ' . implode(', ', $value);
       }
     }
-  }
-
-  if (empty($string)) {
-    $string = t('empty_search', array(), array('context' => 'bibdk_searchhistory'));
   }
 
   return $string;
@@ -366,4 +368,19 @@ function _bibdk_searchhistory_accecpted_param($param, $accepted_params) {
   }
 
   return FALSE;
+}
+
+/**
+ * @param array $element
+ * @return string
+ */
+function _bibdk_searchhistory_get_markup_for_search($element){
+  $params_markup = bibdk_searchhistory_parse_params($element['params']);
+  if(!empty($element['params']['keys'])){
+    $delimiter = (!empty($params_markup)) ? '<br />' : '';
+    $string = t('freetext_search', array(), array('context' => 'bibdk_searchhistory')) . ' = ' . $element['params']['keys'] . $delimiter . $params_markup;
+  } else {
+    $string = $params_markup;
+  }
+  return $string;
 }

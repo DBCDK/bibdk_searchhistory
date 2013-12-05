@@ -92,8 +92,10 @@ function bibdk_searchhistory_ting_openformat_search_results($keys, $searchsresul
     return;
   }
 
+  $params['keys'] = $keys;
+
   $element = array(
-    'string' => (isset($keys) && !empty($keys)) ? $keys : bibdk_searchhistory_parse_params($params),
+    'string' => $keys . bibdk_searchhistory_parse_params($params),
     'params' => $params,
     'count' => isset($searchsresult->numTotalObjects) ? $searchsresult->numTotalObjects : 0,
     'timestamp' => time(),
