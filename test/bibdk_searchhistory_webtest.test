@@ -152,12 +152,12 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
     $this->_removeProviderUser();
   }
 
-  function _test_bibdk_searchhistory_get_search_string(){
+  function _test_bibdk_searchhistory_get_search_string() {
     $element = array(
       'string' => 'test string',
     );
 
-    $expected =  t('freetext_search', array(), array('context' => 'bibdk_searchhistory')) . ' = test string';
+    $expected = t('freetext_search', array(), array('context' => 'bibdk_searchhistory')) . ' = test string';
     $this->assertEqual($expected, _bibdk_searchhistory_get_search_string($element), 'Got ecpexted string');
 
     $expected = 'test string';
@@ -168,15 +168,15 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
       'string' => 'test string?params',
     );
 
-    $expected =  t('freetext_search', array(), array('context' => 'bibdk_searchhistory')) . ' = test string';
+    $expected = t('freetext_search', array(), array('context' => 'bibdk_searchhistory')) . ' = test string';
     $this->assertEqual($expected, _bibdk_searchhistory_get_search_string($element), 'Got ecpexted string');
 
     $raw = TRUE;
-    $expected =  'test string';
+    $expected = 'test string';
     $this->assertEqual($expected, _bibdk_searchhistory_get_search_string($element, $raw), 'Got ecpexted string');
   }
 
-  function _test_bibdk_searchhistory_parse_params(){
+  function _test_bibdk_searchhistory_parse_params() {
     $params = json_decode('{"qe":{"term.type":["bog ELLER term.workType=literature"],"year.op":["year_eq"],"term.language":["ara","bos","bul"],"dkcclterm.fo":["Hest"],"dkcclterm.ti":["Flodhest"],"dkcclterm.em":["Gyngehest"]},"sort":"date_descending"}', TRUE);
     $parsed = bibdk_searchhistory_parse_params($params);
     $expected = 'term.type = bog ELLER term.workType=literature<br />term.language = ara, bos, bul<br />dkcclterm.fo = Hest<br />dkcclterm.ti = Flodhest<br />dkcclterm.em = Gyngehest';
@@ -189,10 +189,10 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
     $pass = 'pass';
     bibdk_provider_user_create_account($name, $pass);
     db_insert('authmap')->fields(array(
-        'uid' => 2,
-        'module' => 'ding_user',
-        'authname' => $name
-      ))->execute();
+      'uid' => 2,
+      'module' => 'ding_user',
+      'authname' => $name
+    ))->execute();
 
     $user = new stdClass();
     $user->uid = 2;
