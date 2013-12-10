@@ -21,10 +21,11 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
   public function setUp() {
     parent::setUp('search', 'ting_openformat', 'bibdk_searchhistory', 'ding_provider', 'bibdk_provider', 'profile2'); //, 'bibdk_webservice');
     variable_set('ting_search_url', 'http://lakiseks.dbc.dk/openbibdk/next/');
-    variable_set('bibdk_provider_webservice_url', 'http://guesstimate.dbc.dk/~mmj/OpenUserinfo/server.php');
+    variable_set('bibdk_provider_webservice_url', 'http://guesstimate.dbc.dk/~mmj/OpenUserinfo/tags/1.4/server.php');
     variable_set('bibdk_provider_security_code', 'testhest');
     variable_set('search_active_modules', array('ting_openformat' => 'ting_openformat'));
     variable_set('search_default_module', 'ting_openformat');
+    variable_set('search_history_accepted_params', 'dkcclterm,term');
     user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array(
       'access content',
       'search content'
@@ -38,6 +39,8 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
     $this->_testCheckProfileTypeDelete();
     $this->_testAddSearchHistoryToWebservice();
     $this->_testBibdkSearchHistoryClass();
+    $this->_test_bibdk_searchhistory_get_search_string();
+    $this->_test_bibdk_searchhistory_parse_params();
   }
 
 
@@ -147,6 +150,37 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
 
 
     $this->_removeProviderUser();
+  }
+
+  function _test_bibdk_searchhistory_get_search_string(){
+    $element = array(
+      'string' => 'test string',
+    );
+
+    $expected =  t('freetext_search', array(), array('context' => 'bibdk_searchhistory')) . ' = test string';
+    $this->assertEqual($expected, _bibdk_searchhistory_get_search_string($element), 'Got ecpexted string');
+
+    $expected = 'test string';
+    $raw = TRUE;
+    $this->assertEqual($expected, _bibdk_searchhistory_get_search_string($element, $raw), 'Got ecpexted string');
+
+    $element = array(
+      'string' => 'test string?params',
+    );
+
+    $expected =  t('freetext_search', array(), array('context' => 'bibdk_searchhistory')) . ' = test string';
+    $this->assertEqual($expected, _bibdk_searchhistory_get_search_string($element), 'Got ecpexted string');
+
+    $raw = TRUE;
+    $expected =  'test string';
+    $this->assertEqual($expected, _bibdk_searchhistory_get_search_string($element, $raw), 'Got ecpexted string');
+  }
+
+  function _test_bibdk_searchhistory_parse_params(){
+    $params = json_decode('{"qe":{"term.type":["bog ELLER term.workType=literature"],"year.op":["year_eq"],"term.language":["ara","bos","bul"],"dkcclterm.fo":["Hest"],"dkcclterm.ti":["Flodhest"],"dkcclterm.em":["Gyngehest"]},"sort":"date_descending"}', TRUE);
+    $parsed = bibdk_searchhistory_parse_params($params);
+    $expected = 'term.type = bog ELLER term.workType=literature<br />term.language = ara, bos, bul<br />dkcclterm.fo = Hest<br />dkcclterm.ti = Flodhest<br />dkcclterm.em = Gyngehest';
+    $this->assertEqual($expected, $parsed, 'Got expected string');
   }
 
 
