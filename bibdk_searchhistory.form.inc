@@ -9,7 +9,6 @@
  * @return array $form
  */
 function bibdk_searchhistory_form($form, $form_state) {
-
   drupal_set_title(t('Searchhistory'));
 
   $elements = BibdkSearchHistory::getAllElements();
@@ -168,11 +167,18 @@ function bibdk_searchhistory_form_combine($form, $form_state) {
   $combinator = $form_state['values']['and_or_radios'];
   foreach ($searches as $search => $string) {
     if ($string) {
-      $string = str_replace('<br />' , $combinator, $string);
       $element = BibdkSearchHistory::getElement($string);
-      $params = str_replace('<br />' , 'OG', bibdk_searchhistory_parse_params($element['params']));
-      $string .= (!empty($params)) ? ' OG ' . $params : '';
-      $combined[] = _bibdk_searchhistory_format_combine_string($string, $combinator);
+      $keys = _bibdk_searchhistory_get_search_string($element, TRUE);
+
+      $params = (!empty($element['params'])) ? str_replace('<br />' , ' OG ', bibdk_searchhistory_parse_params($element['params'])) : array();
+
+      if(!empty($keys) && !empty($params)){
+        $string = $keys . ' OG ' . $params;
+      } else {
+        $string = (!empty($keys)) ? $keys : $params;
+      }
+
+      $combined[] = _bibdk_searchhistory_format_combine_string($string);
     }
   }
 
@@ -220,13 +226,14 @@ function _bibdk_searchhistory_element_view($element) {
   $count = $element['count'];
   $memolist = bibdk_searchhistory_action_link($element);
 
-  $link = !empty($element['params']['keys']) ? 'search/work/' . $element['params']['keys'] : 'search/work/';
+  $string = _bibdk_searchhistory_get_search_string($element, TRUE);
+  $link = !empty($string) ? 'search/work/' . $string : 'search/work/';
 
   $display = _bibdk_searchhistory_get_markup_for_search($element);
 
   return array(
     'search_string' => l($display, $link, array(
-      'query' => $element['params'],
+      'query' => (!empty($element['params'])) ? $element['params'] : array(),
       'html' => TRUE
     )),
     'result_count' => $count,
@@ -250,7 +257,7 @@ function bibdk_searchhistory_action_link($element) {
   }
   static $count;
   $id = isset($element['id']) ? $element['id'] : 'unsaved_' . $count++;
-  $serial_element = urlencode(serialize($element));
+  $serial_element = json_encode($element['string']);
 
   $render = array(
     '#type' => 'link',
@@ -281,7 +288,8 @@ function bibdk_searchhistory_action_link($element) {
  * @param $serial_element
  */
 function bibdk_searchhistory_action_link_callback($unsaved_id, $serial_element) {
-  $element = unserialize(urldecode($serial_element));
+  $string = json_decode($serial_element);
+  $element = BibdkSearchHistory::getElement($string);
   if (!isset($element['id'])) {
     $element = BibdkSearchHistory::addElementToWebservice($element);
     $link = bibdk_searchhistory_action_link($element);
@@ -319,11 +327,47 @@ function bibdk_searchhistory_ajax_command($selector) {
 function bibdk_searchhistory_get_views($elements) {
   $views = array();
   foreach ($elements as $element) {
-    $string = (!empty($element['params']['keys'])) ? $element['params']['keys'] : $element['string']; //_bibdk_searchhistory_get_markup_for_search($element);
+    $string = $element['string'];
     $views[$string] = _bibdk_searchhistory_element_view($element);
   }
 
   return $views;
+}
+
+/**
+ * Checks if param is part of the string stored in th variable
+ * search_history_accepted_params
+ *
+ * @param string $param
+ * @param $accepted_params
+ * @return bool
+ */
+function _bibdk_searchhistory_accecpted_param($param, $accepted_params) {
+  foreach ($accepted_params as $accepted) {
+    if (!empty($accepted) && strpos($param, $accepted) !== FALSE) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * @param array $element
+ * @return string
+ */
+function _bibdk_searchhistory_get_markup_for_search($element){
+  $params_markup = (!empty($element['params'])) ? bibdk_searchhistory_parse_params($element['params']) : array();
+  $string = _bibdk_searchhistory_get_search_string($element);
+
+  if(!empty($params_markup)){
+    if(!empty($string)){
+      $string .= '<br />';
+    }
+    $string .= $params_markup;
+  }
+
+  return $string;
 }
 
 /**
@@ -353,34 +397,15 @@ function bibdk_searchhistory_parse_params($params) {
 }
 
 /**
- * Checks if param is part of the string stored in th variable
- * search_history_accepted_params
- *
- * @param string $param
- * @param $accepted_params
- * @return bool
- */
-function _bibdk_searchhistory_accecpted_param($param, $accepted_params) {
-  foreach ($accepted_params as $accepted) {
-    if (!empty($accepted) && strpos($param, $accepted) === 0) {
-      return TRUE;
-    }
-  }
-
-  return FALSE;
-}
-
-/**
- * @param array $element
+ * @param $element
+ * @param bool $raw
  * @return string
  */
-function _bibdk_searchhistory_get_markup_for_search($element){
-  $params_markup = bibdk_searchhistory_parse_params($element['params']);
-  if(!empty($element['params']['keys'])){
-    $delimiter = (!empty($params_markup)) ? '<br />' : '';
-    $string = t('freetext_search', array(), array('context' => 'bibdk_searchhistory')) . ' = ' . $element['params']['keys'] . $delimiter . $params_markup;
-  } else {
-    $string = $params_markup;
+function _bibdk_searchhistory_get_search_string($element, $raw = FALSE){
+  $keys = explode('?', $element['string']);
+  if(!$raw){
+    return (!empty($keys[0])) ? t('freetext_search', array(), array('context' => 'bibdk_searchhistory')) . ' = ' . $keys[0] : '';
   }
-  return $string;
+
+  return $keys[0];
 }

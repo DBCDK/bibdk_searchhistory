@@ -15,12 +15,12 @@ module_load_include('inc', 'bibdk_searchhistory', 'includes/bibdk_searchhistory.
  * @see ding_user.module)
  * */
 function bibdk_searchhistory_user_profile2_tabs() {
-  
+
   $ret = new stdClass();
   $ret->label = t('searchhistory');
   $ret->form = 'bibdk_searchhistory_form';
   $ret->type = 'bibdk_search_history';
-  
+
   return $ret;
 }
 
@@ -35,6 +35,7 @@ function bibdk_searchhistory_menu() {
     'page callback' => 'bibdk_searchhistory_action_link_callback',
     'page arguments' => array(2, 3),
     'access callback' => TRUE,
+    'file' => 'includes/bibdk_searchhistory.form.inc',
     'type' => MENU_CALLBACK,
   );
   $items['admin/config/search/bibdk_searchhistory'] = array(
@@ -92,13 +93,17 @@ function bibdk_searchhistory_ting_openformat_search_results($keys, $searchsresul
     return;
   }
 
-  $params['keys'] = $keys;
+  $string = url($keys, array(
+    'query' => $params,
+    'external' => TRUE
+  ));
 
   $element = array(
-    'string' => $keys . bibdk_searchhistory_parse_params($params),
+    'string' => str_replace(array('[', ']'), '', $string),
     'params' => $params,
     'count' => isset($searchsresult->numTotalObjects) ? $searchsresult->numTotalObjects : 0,
     'timestamp' => time(),
   );
+
   BibdkSearchHistory::addElementToSession($element);
 }
