@@ -170,11 +170,12 @@ function bibdk_searchhistory_form_combine($form, $form_state) {
       $element = BibdkSearchHistory::getElement($string);
       $keys = _bibdk_searchhistory_get_search_string($element, TRUE);
 
-      $params = (!empty($element['params'])) ? str_replace('<br />' , ' OG ', bibdk_searchhistory_parse_params($element['params'])) : array();
+      $params = (!empty($element['params'])) ? str_replace('<br />', ' OG ', bibdk_searchhistory_parse_params($element['params'])) : array();
 
-      if(!empty($keys) && !empty($params)){
+      if (!empty($keys) && !empty($params)) {
         $string = $keys . ' OG ' . $params;
-      } else {
+      }
+      else {
         $string = (!empty($keys)) ? $keys : $params;
       }
 
@@ -356,12 +357,12 @@ function _bibdk_searchhistory_accecpted_param($param, $accepted_params) {
  * @param array $element
  * @return string
  */
-function _bibdk_searchhistory_get_markup_for_search($element){
+function _bibdk_searchhistory_get_markup_for_search($element) {
   $params_markup = (!empty($element['params'])) ? bibdk_searchhistory_parse_params($element['params']) : array();
   $string = _bibdk_searchhistory_get_search_string($element);
 
-  if(!empty($params_markup)){
-    if(!empty($string)){
+  if (!empty($params_markup)) {
+    if (!empty($string)) {
       $string .= '<br />';
     }
     $string .= $params_markup;
@@ -385,7 +386,7 @@ function bibdk_searchhistory_parse_params($params) {
   if (!empty($params['qe'])) {
     foreach ($params['qe'] as $param => $value) {
       if (_bibdk_searchhistory_accecpted_param($param, $accepted_params)) {
-        if(!empty($string)){
+        if (!empty($string)) {
           $string .= '<br />';
         }
         $string .= $param . ' = ' . implode(', ', $value);
@@ -401,9 +402,9 @@ function bibdk_searchhistory_parse_params($params) {
  * @param bool $raw
  * @return string
  */
-function _bibdk_searchhistory_get_search_string($element, $raw = FALSE){
+function _bibdk_searchhistory_get_search_string($element, $raw = FALSE) {
   $keys = explode('?', $element['string']);
-  if(!$raw){
+  if (!$raw) {
     return (!empty($keys[0])) ? t('freetext_search', array(), array('context' => 'bibdk_searchhistory')) . ' = ' . $keys[0] : '';
   }
 
