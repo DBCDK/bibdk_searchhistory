@@ -33,7 +33,7 @@ class BibdkSearchHistoryUnitTest extends DrupalUnitTestCase {
     }
   }
 
-  public function testBibdk_searchhistory_accecpted_param(){
+  public function testBibdk_searchhistory_accecpted_param() {
     module_load_include('form.inc', 'bibdk_searchhistory');
     $arr = array();
     $this->assertFalse(_bibdk_searchhistory_accecpted_param('string', $arr), 'Returned false as expected');
