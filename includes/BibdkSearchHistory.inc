@@ -20,6 +20,7 @@ class BibdkSearchHistory {
       'oui:searchHistoryCount' => $element['count'],
     );
     $element['id'] = _bibdk_searchhistory_add_element_webservice($object);
+
     return $element;
   }
 
