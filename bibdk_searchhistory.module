@@ -54,6 +54,7 @@ function bibdk_searchhistory_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_LOCAL_TASK,
   );
+
   return $items;
 }
 
@@ -89,7 +90,7 @@ function bibdk_searchhistory_ctools_plugin_api($module, $api) {
  * @param String $params
  */
 function bibdk_searchhistory_ting_openformat_search_results($keys, $searchsresult, $params) {
-  if(!empty($params['facets']) && variable_get('search_history_save_facet_search', 0) !== 1){
+  if (!empty($params['facets']) && variable_get('search_history_save_facet_search', 0) !== 1) {
     return;
   }
 
