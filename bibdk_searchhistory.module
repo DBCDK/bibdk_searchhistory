@@ -15,12 +15,12 @@ module_load_include('inc', 'bibdk_searchhistory', 'includes/bibdk_searchhistory.
  * @see ding_user.module)
  * */
 function bibdk_searchhistory_user_profile2_tabs() {
-  
+
   $ret = new stdClass();
   $ret->label = t('searchhistory');
   $ret->form = 'bibdk_searchhistory_form';
   $ret->type = 'bibdk_search_history';
-  
+
   return $ret;
 }
 
@@ -35,10 +35,11 @@ function bibdk_searchhistory_menu() {
     'page callback' => 'bibdk_searchhistory_action_link_callback',
     'page arguments' => array(2, 3),
     'access callback' => TRUE,
+    'file' => 'includes/bibdk_searchhistory.form.inc',
     'type' => MENU_CALLBACK,
   );
   $items['admin/config/search/bibdk_searchhistory'] = array(
-    'title' => 'Bibdk search history',
+    'title' => 'Search History',
     'description' => 'Settings for display of search history',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('bibdk_searchhistory_admin'),
@@ -53,6 +54,7 @@ function bibdk_searchhistory_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_LOCAL_TASK,
   );
+
   return $items;
 }
 
@@ -79,17 +81,30 @@ function bibdk_searchhistory_ctools_plugin_api($module, $api) {
 
 /**
  * Implements hook_ting_openformat_search_results.
+ *
  * Called from ting_search when a search is being executed.
  * Saves the search string and number of results in the $_SESSION variable
  *
  * @param String $keys - searchstring
  * @param int $searchsresult - result count
+ * @param String $params
  */
-function bibdk_searchhistory_ting_openformat_search_results($keys, $searchsresult) {
+function bibdk_searchhistory_ting_openformat_search_results($keys, $searchsresult, $params) {
+  if (!empty($params['facets']) && variable_get('search_history_save_facet_search', 0) !== 1) {
+    return;
+  }
+
+  $string = url($keys, array(
+    'query' => $params,
+    'external' => TRUE
+  ));
+
   $element = array(
-    'string' => $keys,
+    'string' => str_replace(array('[', ']'), '', $string),
+    'params' => $params,
     'count' => isset($searchsresult->numTotalObjects) ? $searchsresult->numTotalObjects : 0,
     'timestamp' => time(),
   );
+
   BibdkSearchHistory::addElementToSession($element);
 }
