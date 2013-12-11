@@ -165,15 +165,16 @@ function bibdk_searchhistory_form_combine($form, $form_state) {
   $searches = $form_state['values']['bibdk_search_history_table'];
   $combined = array();
   $combinator = $form_state['values']['and_or_radios'];
+  $params_combinator = t(' params_combinator_placeholder ', array(), array('context' => 'bibdk_searchhistory'));
   foreach ($searches as $search => $string) {
     if ($string) {
       $element = BibdkSearchHistory::getElement($string);
       $keys = _bibdk_searchhistory_get_search_string($element, TRUE);
 
-      $params = (!empty($element['params'])) ? str_replace('<br />', ' OG ', bibdk_searchhistory_parse_params($element['params'])) : array();
+      $params = (!empty($element['params'])) ? str_replace('<br />', $params_combinator, bibdk_searchhistory_parse_params($element['params'])) : array();
 
       if (!empty($keys) && !empty($params)) {
-        $string = $keys . ' OG ' . $params;
+        $string = $keys . $params_combinator . $params;
       }
       else {
         $string = (!empty($keys)) ? $keys : $params;
