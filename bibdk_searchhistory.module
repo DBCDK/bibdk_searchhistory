@@ -35,7 +35,7 @@ function bibdk_searchhistory_menu() {
     'page callback' => 'bibdk_searchhistory_action_link_callback',
     'page arguments' => array(2, 3),
     'access callback' => TRUE,
-    'file' => 'includes/bibdk_searchhistory.form.inc',
+    'file' => 'bibdk_searchhistory.form.inc',
     'type' => MENU_CALLBACK,
   );
   $items['admin/config/search/bibdk_searchhistory'] = array(
