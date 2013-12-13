@@ -5,9 +5,9 @@
  *
  */
 
-(function ($) {
-    Drupal.ajax.prototype.commands.searchhistory_remove = function(ajax, response, status){
-        var selector = response['selector'];
-        $(selector).closest('tr').remove();
-    }
+(function($) {
+  Drupal.ajax.prototype.commands.searchhistory_remove = function(ajax, response, status) {
+    var selector = response['selector'];
+    $(selector).closest('tr').remove();
+  }
 })(jQuery);

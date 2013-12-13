@@ -9,11 +9,11 @@
  * @return array $form
  */
 function bibdk_searchhistory_form($form, $form_state) {
-
   drupal_set_title(t('Searchhistory'));
 
   $elements = BibdkSearchHistory::getAllElements();
   $search_views = bibdk_searchhistory_get_views($elements);
+
   $form['#attributes']['class'] = array(
     'searchhistory',
   );
@@ -74,8 +74,10 @@ function bibdk_searchhistory_form($form, $form_state) {
   return $form;
 }
 
-/** Wrapper for ting_openformat_get_cql_commando
- * see ting_openformat.module
+/**
+ * Wrapper for ting_openformat_get_cql_commando
+ * See ting_openformat.module
+ *
  * @param $cql
  * @return string
  */
@@ -99,11 +101,13 @@ function bibdk_searchhistory_get_primary_actions() {
     '#title' => t('mark_all_none', array(), array('context' => 'bibdk_cart')),
     '#title_display' => 'invisible',
     '#href' => '',
-    '#options' => array('attributes' => array(
-      'class' => array(
-        'select-all'
+    '#options' => array(
+      'attributes' => array(
+        'class' => array(
+          'select-all'
+        ),
+        'title' => t('Go to cart')
       ),
-      'title' => t('Go to cart')),
     ),
 
   );
@@ -124,11 +128,11 @@ function bibdk_searchhistory_get_primary_actions() {
 }
 
 /**
- * form callback function. Removes selected entries from $_SESSION['searches] array and deletes posts in db if necessary
+ * Form callback function. Removes selected entries from $_SESSION['searches] array and deletes posts in db if necessary
  *
- * @global Array $user
  * @param array $form
  * @param array $form_state
+ * @return array
  */
 function bibdk_searchhistory_form_delete($form, &$form_state) {
   $searches = $form_state['values']['bibdk_search_history_table'];
@@ -149,6 +153,7 @@ function bibdk_searchhistory_form_delete($form, &$form_state) {
       }
     }
   }
+
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
@@ -160,8 +165,21 @@ function bibdk_searchhistory_form_combine($form, $form_state) {
   $searches = $form_state['values']['bibdk_search_history_table'];
   $combined = array();
   $combinator = $form_state['values']['and_or_radios'];
+  $params_combinator = ' ' . t('params_combinator_placeholder', array(), array('context' => 'bibdk_searchhistory')) . ' ';
   foreach ($searches as $search => $string) {
     if ($string) {
+      $element = BibdkSearchHistory::getElement($string);
+      $keys = _bibdk_searchhistory_get_search_string($element, TRUE);
+
+      $params = (!empty($element['params'])) ? str_replace('<br />', $params_combinator, bibdk_searchhistory_parse_params($element['params'])) : array();
+
+      if (!empty($keys) && !empty($params)) {
+        $string = $keys . $params_combinator . $params;
+      }
+      else {
+        $string = (!empty($keys)) ? $keys : $params;
+      }
+
       $combined[] = _bibdk_searchhistory_format_combine_string($string);
     }
   }
@@ -185,7 +203,8 @@ function _bibdk_searchhistory_format_combine_string($string) {
 
   foreach ($tokens as $token) {
     if ($token == ')') {
-      while (array_pop($stack) != '(') {}
+      while (array_pop($stack) != '(') {
+      }
     }
     else {
       array_push($stack, $token);
@@ -206,17 +225,26 @@ function _bibdk_searchhistory_format_combine_string($string) {
  * @return array
  */
 function _bibdk_searchhistory_element_view($element) {
-  $string = $element['string'];
   $count = $element['count'];
   $memolist = bibdk_searchhistory_action_link($element);
+
+  $string = _bibdk_searchhistory_get_search_string($element, TRUE);
+  $link = !empty($string) ? 'search/work/' . $string : 'search/work/';
+
+  $display = _bibdk_searchhistory_get_markup_for_search($element);
+
   return array(
-    'search_string' => l($string, 'search/work/' . $string),
+    'search_string' => l($display, $link, array(
+      'query' => (!empty($element['params'])) ? $element['params'] : array(),
+      'html' => TRUE
+    )),
     'result_count' => $count,
     'memolist' => drupal_render($memolist),
   );
 }
 
-/** Create an add remove button for logged in users
+/**
+ * Create an add/remove button for logged in users
  *
  * @param $element
  * @return array
@@ -230,8 +258,8 @@ function bibdk_searchhistory_action_link($element) {
     );
   }
   static $count;
-  $id = isset($element['id']) ? $element['id'] : 'unsaved_'.$count++;
-  $serial_element = urlencode(serialize($element));
+  $id = isset($element['id']) ? $element['id'] : 'unsaved_' . $count++;
+  $serial_element = json_encode($element['string']);
 
   $render = array(
     '#type' => 'link',
@@ -250,17 +278,20 @@ function bibdk_searchhistory_action_link($element) {
       'js' => array(drupal_get_path('module', 'bibdk_searchhistory') . '/js/bibdk_searchhistory.ajax.js'),
     ),
   );
+
   return $render;
 }
 
 
-/** Ajax callback : add/remove search history element from webservice
+/**
+ * Ajax callback : add/remove search history element from webservice
  *
- * @param $count
+ * @param $unsaved_id
  * @param $serial_element
  */
 function bibdk_searchhistory_action_link_callback($unsaved_id, $serial_element) {
-  $element = unserialize(urldecode($serial_element));
+  $string = json_decode($serial_element);
+  $element = BibdkSearchHistory::getElement($string);
   if (!isset($element['id'])) {
     $element = BibdkSearchHistory::addElementToWebservice($element);
     $link = bibdk_searchhistory_action_link($element);
@@ -276,7 +307,8 @@ function bibdk_searchhistory_action_link_callback($unsaved_id, $serial_element) 
   ajax_deliver($callback);
 }
 
-/** Ajax command to remove element from dom
+/**
+ * Ajax command to remove element from dom
  *
  * @param $selector
  * @return array
@@ -288,7 +320,8 @@ function bibdk_searchhistory_ajax_command($selector) {
   );
 }
 
-/** Generate views from searchhistory elements
+/**
+ * Generate views from searchhistory elements
  *
  * @param $elements
  * @return array
@@ -296,7 +329,85 @@ function bibdk_searchhistory_ajax_command($selector) {
 function bibdk_searchhistory_get_views($elements) {
   $views = array();
   foreach ($elements as $element) {
-    $views[$element['string']] = _bibdk_searchhistory_element_view($element);
+    $string = $element['string'];
+    $views[$string] = _bibdk_searchhistory_element_view($element);
   }
+
   return $views;
+}
+
+/**
+ * Checks if param is part of the string stored in th variable
+ * search_history_accepted_params
+ *
+ * @param string $param
+ * @param $accepted_params
+ * @return bool
+ */
+function _bibdk_searchhistory_accecpted_param($param, $accepted_params) {
+  foreach ($accepted_params as $accepted) {
+    if (!empty($accepted) && strpos($param, $accepted) !== FALSE) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * @param array $element
+ * @return string
+ */
+function _bibdk_searchhistory_get_markup_for_search($element) {
+  $params_markup = (!empty($element['params'])) ? bibdk_searchhistory_parse_params($element['params']) : array();
+  $string = _bibdk_searchhistory_get_search_string($element);
+
+  if (!empty($params_markup)) {
+    if (!empty($string)) {
+      $string .= '<br />';
+    }
+    $string .= $params_markup;
+  }
+
+  return $string;
+}
+
+/**
+ * Parse search params into a string seperated by <br />'s to obtain a nicer
+ * view
+ *
+ * @param array $params
+ * @return string $string
+ */
+function bibdk_searchhistory_parse_params($params) {
+  $string = '';
+
+  $accepted_params = explode(',', variable_get('search_history_accepted_params', 'dkcclterm,term'));
+
+  if (!empty($params['qe'])) {
+    foreach ($params['qe'] as $param => $value) {
+      if (_bibdk_searchhistory_accecpted_param($param, $accepted_params)) {
+        if (!empty($string)) {
+          $string .= '<br />';
+        }
+        $string .= $param . ' = ' . implode(', ', $value);
+      }
+    }
+  }
+
+  return $string;
+}
+
+/**
+ * @param $element
+ * @param bool $raw
+ * @return string
+ */
+function _bibdk_searchhistory_get_search_string($element, $raw = FALSE) {
+  $keys = explode('?', $element['string']);
+  if (!$raw) {
+    return (!empty($keys[0])) ? t('freetext_search', array(), array('context' => 'bibdk_searchhistory')) . ' = ' . $keys[0] : '';
+  }
+
+  return $keys[0];
 }

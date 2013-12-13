@@ -31,7 +31,8 @@ function _bibdk_searchhistory_remove_element_webservice($element, $user = NULL) 
   return NULL;
 }
 
-/** Get search history from provider webservice
+/**
+ * Get search history from provider webservice
  * @param null $user
  * @return array
  */
@@ -138,6 +139,9 @@ function bibdk_searchhistory_parse_content($xpath) {
             break;
           case 'oui:searchHistoryString' :
             $element['string'] = $child->nodeValue;
+            break;
+          case 'oui:searchHistoryParams' :
+            $element['params'] = isset($child->nodeValue) ? json_decode($child->nodeValue, TRUE) : array();
             break;
           case 'oui:searchHistoryCount' :
             $element['count'] = $child->nodeValue;

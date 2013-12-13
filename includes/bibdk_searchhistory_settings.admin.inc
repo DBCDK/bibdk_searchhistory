@@ -14,20 +14,27 @@ function bibdk_searchhistory_admin() {
     '#default_value' => variable_get('search_history_save_limit', 25),
   );
 
+  $form['search_history_save_facet_search'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Save facet searches'),
+    '#description' => 'If checked searches using facets will be saved in the search history',
+    '#default_value' => variable_get('search_history_save_facet_search', 0),
+  );
+
+  $form['search_history_accepted_params'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Params that should be accepted to display in search history'),
+    '#size' => 50,
+    '#description' => t('Commaseperated values. No spaces! E.g. dkcclterm,term'),
+    '#default_value' => variable_get('search_history_accepted_params', 'dkcclterm,term'),
+  );
+
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#submit' => array('bibdk_searchhistory_admin_submit'),
     '#value' => t('Save'),
   );
-  return $form;
-}
 
-/**
- * Submit handler for bibdk_searchhistory_admin();
- */
-function bibdk_searchhistory_admin_submit($form, &$form_state) {
-  $value = $form_state['values']['search_history_save_limit'];
-  variable_set('search_history_save_limit', (int) abs($value));
-  drupal_set_message(t('Value saved', array(), array('context' => 'bibdk_searchhistory')), 'status');
+  return system_settings_form($form);
 }
