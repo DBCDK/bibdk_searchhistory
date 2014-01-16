@@ -15,6 +15,7 @@ function bibdk_searchhistory_bibdk_mypage_tabs($max_rows = 3) {
     'title' => t('Go to search history'),
     'href' => 'user/' . $user->uid . '/edit/bibdk_search_history',
   );
+  $ret['bibdk_searchhistory']['weight'] = 15;
 
   return $ret;
 }
