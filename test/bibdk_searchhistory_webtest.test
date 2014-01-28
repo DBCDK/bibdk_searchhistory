@@ -36,6 +36,7 @@ class BibdkSearchHistoryTestCase extends DrupalWebTestCase {
   }
 
   public function testRunner() {
+    $this->_removeProviderUser();
     $this->_testCheckProfileTypeDelete();
     $this->_testAddSearchHistoryToWebservice();
     $this->_testBibdkSearchHistoryClass();
