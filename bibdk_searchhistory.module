@@ -90,6 +90,12 @@ function bibdk_searchhistory_ctools_plugin_api($module, $api) {
  * @param String $params
  */
 function bibdk_searchhistory_ting_openformat_search_results($keys, $searchsresult, $params) {
+  // An array of unwanted values from the params array
+  $illegal_params = array('trackingId');
+
+  // Remove unwanted values from the params array before saving it
+  $params = array_diff_key($params, array_flip($illegal_params));
+
   if (!empty($params['facets']) && variable_get('search_history_save_facet_search', 0) !== 1) {
     return;
   }
