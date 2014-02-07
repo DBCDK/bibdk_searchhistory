@@ -11,20 +11,6 @@ module_load_include('inc', 'bibdk_searchhistory', 'includes/bibdk_searchhistory.
  */
 
 /**
- * Impelements user_profile_tabs (
- * @see ding_user.module)
- * */
-function bibdk_searchhistory_user_profile2_tabs() {
-
-  $ret = new stdClass();
-  $ret->label = t('searchhistory');
-  $ret->form = 'bibdk_searchhistory_form';
-  $ret->type = 'bibdk_search_history';
-
-  return $ret;
-}
-
-/**
  * Implements hook_menu().
  * Sets up menu items.
  *
@@ -53,9 +39,20 @@ function bibdk_searchhistory_menu() {
     'page arguments' => array('bibdk_searchhistory_form'),
     'access arguments' => array('access content'),
     'type' => MENU_LOCAL_TASK,
+    'weight' => 10,
   );
 
+  $items['user/%user/searchhistory'] =  array(
+    'title' => 'Search history',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bibdk_searchhistory_form'),
+    'access callback' => 'user_edit_access',
+    'access arguments'=> array(1),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 15,
+  );
   return $items;
+
 }
 
 /**
