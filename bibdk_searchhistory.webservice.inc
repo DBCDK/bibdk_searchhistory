@@ -113,7 +113,7 @@ function bibdk_searchhistory_parse_id($xpath) {
  * @return array
  */
 function bibdk_searchhistory_parse_content($xpath) {
-  if (!isset($xpath)) {
+  if (empty($xpath)) {
     return array();
   }
   // grap elements
