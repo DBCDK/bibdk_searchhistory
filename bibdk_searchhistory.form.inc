@@ -106,20 +106,22 @@ function bibdk_searchhistory_get_primary_actions() {
         'class' => array(
           'select-all'
         ),
-        'title' => t('Go to cart')
+        'title' => t('mark_all_none', array(), array('context' => 'bibdk_cart'))
       ),
     ),
-
   );
 
-  $elements['delete'] = array(
-    '#type' => 'submit',
-    '#value' => t('Delete selected'),
-    '#submit' => array('bibdk_searchhistory_form_delete'),
-    '#attributes' => array(
-      'disabled' => TRUE,
-      'class' => array(
-        'button-as-link',
+  $elements['delete_selected'] = array(
+    '#type' => 'link',
+    '#title' => t('delete_selected', array(), array('context' => 'bibdk_cart')),
+    '#title_display' => 'invisible',
+    '#href' => '',
+    '#options' => array(
+      'attributes' => array(
+        'class' => array(
+          'delete-selected'
+        ),
+        'title' => t('delete_selected', array(), array('context' => 'bibdk_cart'))
       ),
     ),
   );

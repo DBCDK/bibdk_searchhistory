@@ -21,6 +21,11 @@
                 countSelected();
             });
 
+            $('.delete-selected', context).click(function (e) {
+                e.preventDefault();
+                $(this).parents('form').submit();
+            });
+
             //single rows
             $('input.combine-select', context).change(function () {
                 countSelected()
