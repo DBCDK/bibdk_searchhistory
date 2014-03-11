@@ -24,6 +24,7 @@ function bibdk_searchhistory_my_page_get_rows($max_rows) {
   global $user;
   $ret = array();
 
+  $session_history = array();
   if (ding_user_is_provider_user($user)) {
     $header['memolist'] = t('Memolist');
     $session_history = BibdkSearchHistory::getAllElements();
