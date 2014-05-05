@@ -54,6 +54,12 @@ function bibdk_searchhistory_form($form, $form_state) {
     '#default_value' => $op_and,
   );
 
+  $form['bibdk_searchhistory_form']['delete_selected_buffer'] = array(
+    '#type' => 'hidden',
+    '#default_value' => '',
+    '#attributes' => array('id' => 'delete-selected-buffer'),
+  );
+
   $form['bibdk_searchhistory_form']['combine'] = array(
     '#type' => 'submit',
     '#value' => t('Combiner'),
@@ -131,6 +137,7 @@ function bibdk_searchhistory_get_primary_actions() {
 
 /**
  * Form callback function. Removes selected entries from $_SESSION['searches] array and deletes posts in db if necessary
+ * Used to be activated by a submit button.
  *
  * @param array $form
  * @param array $form_state
@@ -164,6 +171,10 @@ function bibdk_searchhistory_form_delete($form, &$form_state) {
  * @param array $form_state
  */
 function bibdk_searchhistory_form_combine($form, $form_state) {
+  if ( $form_state['values']['delete_selected_buffer'] == 'delete' ) {
+    bibdk_searchhistory_form_delete($form, $form_state);
+    return FALSE;
+  }
   $searches = $form_state['values']['bibdk_search_history_table'];
   $combined = array();
   $combinator = $form_state['values']['and_or_radios'];

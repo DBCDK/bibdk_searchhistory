@@ -23,6 +23,7 @@
 
             $('.delete-selected', context).click(function (e) {
                 e.preventDefault();
+                $('#delete-selected-buffer', context).val("delete");
                 $(this).parents('form').submit();
             });
 
