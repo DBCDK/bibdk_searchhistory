@@ -97,6 +97,11 @@ function bibdk_searchhistory_ting_openformat_search_results($keys, $searchsresul
     return;
   }
 
+  if(empty($keys) && isset($params['qe']['query'])){
+    $keys = $params['qe']['query'];
+    unset($params['qe']['query']);
+  }
+
   $string = url($keys, array(
     'query' => $params,
     'external' => TRUE
