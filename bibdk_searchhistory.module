@@ -116,3 +116,10 @@ function bibdk_searchhistory_ting_openformat_search_results($keys, $searchsresul
 
   BibdkSearchHistory::addElementToSession($element);
 }
+
+/**
+ * Implements hook to user_help_list
+ * */
+function bibdk_searchhistory_user_help_list() {
+  return array('search_history_mypage_help_key'=>'search_history_mypage_help_label');
+}

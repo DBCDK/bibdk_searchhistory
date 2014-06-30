@@ -71,12 +71,12 @@ function bibdk_searchhistory_form($form, $form_state) {
       'disabled' => TRUE
     ),
   );
-
+  
   //Adding JavaScript
   $form['#attached']['js'] = array(
     drupal_get_path('module', 'bibdk_searchhistory') . '/js/bibdk_searchhistory.js',
   );
-
+  
   return $form;
 }
 
