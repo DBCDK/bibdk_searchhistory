@@ -43,13 +43,15 @@ function bibdk_searchhistory_form($form, $form_state) {
       ),
     ),
   );
+  $op_and = _bibdk_searchhistory_get_cql('AND');
+  $op_or = _bibdk_searchhistory_get_cql('OR');;
 
-  $radios = array(CQL_AND => t('Combine "And"'), CQL_OR => t('Combine "Or"'));
+  $radios = array($op_and => t('Combine "And"'), $op_or => t('Combine "Or"'));
 
   $form['bibdk_searchhistory_form']['and_or_radios'] = array(
     '#type' => 'radios',
     '#options' => $radios,
-    '#default_value' => CQL_AND,
+    '#default_value' => $op_and,
   );
 
   $form['bibdk_searchhistory_form']['delete_selected_buffer'] = array(
@@ -69,13 +71,24 @@ function bibdk_searchhistory_form($form, $form_state) {
       'disabled' => TRUE
     ),
   );
-
+  
   //Adding JavaScript
   $form['#attached']['js'] = array(
     drupal_get_path('module', 'bibdk_searchhistory') . '/js/bibdk_searchhistory.js',
   );
-
+  
   return $form;
+}
+
+/**
+ * Wrapper for ting_openformat_get_cql_commando
+ * See ting_openformat.module
+ *
+ * @param $cql
+ * @return string
+ */
+function _bibdk_searchhistory_get_cql($cql) {
+  return function_exists('ting_openformat_get_cql_commando') ? ting_openformat_get_cql_commando($cql) : ' ' . $cql . ' ';
 }
 
 function bibdk_searchhistory_get_primary_actions() {
