@@ -180,7 +180,7 @@ function bibdk_searchhistory_form_combine($form, $form_state) {
         $string = (!empty($keys)) ? $keys : $params;
       }
 
-      $combined[] = _bibdk_searchhistory_format_combine_string($string);
+      $combined[] = "($string)";
     }
   }
 
